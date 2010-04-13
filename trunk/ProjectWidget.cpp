@@ -17,6 +17,8 @@ ProjectWidget::ProjectWidget(VCardProject* project, QWidget *parent) :
 {
     m_ui->setupUi(this);
 
+    m_ui->duplicatesTreeView->hide();
+
     updateProjectView();
     updateButtons();
 }
@@ -294,4 +296,16 @@ int ProjectWidget::getTagIndex(const QModelIndex& index) const\
     int tagIndex = currentIndex.data(Qt::UserRole).toInt();
     return tagIndex;
 
+}
+
+void ProjectWidget::on_showDuplicatesButton_clicked()
+{
+    m_ui->duplicatesTreeView->show();
+    m_ui->duplicatesButtonStackedWidget->setCurrentWidget(m_ui->hideDuplicatesPage);
+}
+
+void ProjectWidget::on_hideDuplicatesButton_clicked()
+{
+    m_ui->duplicatesTreeView->hide();
+    m_ui->duplicatesButtonStackedWidget->setCurrentWidget(m_ui->showDuplicatesPage);
 }
