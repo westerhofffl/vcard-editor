@@ -3,6 +3,7 @@
 
 class VCard;
 class QFile;
+#include <QMap>
 #include <QString>
 #include <QStringList>
 
@@ -24,16 +25,16 @@ public:
     QString getVersionAsString() const;
     static QString getVersionAsString(Version version);
 
-    int getVCardCount() const;
-    VCard getVCard(int index) const;
+    QList<int> getVCardIdList() const;
+    VCard getVCard(int id) const;
 
-    void addVCard(const VCard& vCard);
-    void updateVCard(int index, const VCard& vCard);
-    void removeVCard(int index);
+    int addVCard(const VCard& vCard);
+    void updateVCard(int id, const VCard& vCard);
+    void removeVCard(int id);
 
 private:
     QString m_absoluteFilePath;
-    QStringList m_vCardList;
+    QMap<int, QString> m_vCardContentMap;
 };
 
 #endif // VCARDPROJECT_H

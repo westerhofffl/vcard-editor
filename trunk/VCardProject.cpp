@@ -15,11 +15,13 @@ VCardProject::VCardProject(QFile& file)
    cardRegExp.setCaseSensitivity(Qt::CaseInsensitive);
    cardRegExp.setMinimal(true);
    int offset = 0;
+   int id = 1;
    while(cardRegExp.indexIn(content, offset, QRegExp::CaretAtOffset) != -1)
    {
       QString cardString = cardRegExp.cap();
-      m_vCardList.append(cardString);
+      m_vCardContentMap[id]= cardString;
       offset += cardString.length();
+      ++id;
    }
 }
 
@@ -45,28 +47,36 @@ QString VCardProject::getVersionAsString(Version version)
    }
 }
 
-int VCardProject::getVCardCount() const
+QList<int> VCardProject::getVCardIdList() const
 {
-   return m_vCardList.length();
+   QList<int> idList = m_vCardContentMap.keys();
+   return idList;
 }
-VCard VCardProject::getVCard(int index) const
+VCard VCardProject::getVCard(int id) const
 {
-   QString vCardContent(m_vCardList.at(index));
+   QString vCardContent = m_vCardContentMap.value(id);
    VCard vcard(vCardContent);
    return vcard;
 }
 
-void VCardProject::addVCard(const VCard& vCard)
+int VCardProject::addVCard(const VCard& vCard)
 {
-   m_vCardList.append(vCard.getContent());
+   int id = 1;
+   QList<int> idList = getVCardIdList();
+   if (!idList.isEmpty())
+   {
+       id = idList.last() + 1;
+   }
+   m_vCardContentMap.insert(id, vCard.getContent());
+   return id;
 }
 
-void VCardProject::updateVCard(int index, const VCard& vCard)
+void VCardProject::updateVCard(int id, const VCard& vCard)
 {
-   m_vCardList[index] = vCard.getContent();
+   m_vCardContentMap[id] = vCard.getContent();
 }
 
-void VCardProject::removeVCard(int index)
+void VCardProject::removeVCard(int id)
 {
-   m_vCardList.removeAt(index);
+   m_vCardContentMap.remove(id);
 }
