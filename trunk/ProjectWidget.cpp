@@ -3,24 +3,56 @@
 #include "VCard.h"
 #include "VCardProject.h"
 
+#include <QStandardItemModel>
+
 ProjectWidget::ProjectWidget(VCardProject* project, QWidget *parent) :
     QWidget(parent),
     m_ui(new Ui::ProjectWidget),
-    m_project(project)
+    m_project(project),
+    m_model(0)
 {
     m_ui->setupUi(this);
 
-    m_ui->tableWidget->setSortingEnabled(true);
-    m_ui->tableWidget->clear();
-    m_ui->tableWidget->setRowCount(project->getVCardCount());
-    for(int index = 0; index < project->getVCardCount(); ++index)
+    updateProjectView();
+}
+
+void ProjectWidget::updateProjectView()
+{
+    delete m_model;
+    m_model = new SortModel(m_ui->treeView);
+
+    QStandardItemModel* dataModel = new QStandardItemModel(m_project->getVCardCount(), COLUMN_COUNT, m_model);
+    dataModel->setHeaderData(TAG_COLUMN, Qt::Horizontal, "Tag");
+    dataModel->setHeaderData(PROPERTIES_COLUMN, Qt::Horizontal, "Properties");
+    dataModel->setHeaderData(CONTENT_COLUMN, Qt::Horizontal, "Content");
+    m_model->setSourceModel(dataModel);    
+
+    for(int index = 0; index < m_project->getVCardCount(); ++index)
     {
-       VCard vCard = project->getVCard(index);
-       updateVCard(index, vCard);
+        VCard vCard = m_project->getVCard(index);
+
+        QStandardItem* item = new QStandardItem(vCard.getSummary());
+        item->setData(index, Qt::UserRole);
+        item->setRowCount(vCard.getTagCount());
+        item->setColumnCount(COLUMN_COUNT);
+        dataModel->setItem(index, item);
+
+        for(int tagIndex = 0; tagIndex < vCard.getTagCount(); ++tagIndex)
+        {
+            QStandardItem* tagItem = new QStandardItem(vCard.getTag(tagIndex));
+            tagItem->setData(tagIndex, Qt::UserRole);
+            item->setChild(tagIndex, TAG_COLUMN, tagItem);
+            QStandardItem* propertyItem = new QStandardItem(vCard.getTagProperties(tagIndex).join(";"));
+            item->setChild(tagIndex, PROPERTIES_COLUMN, propertyItem);
+            QStandardItem* contentItem = new QStandardItem(vCard.getTagContent(tagIndex));
+            item->setChild(tagIndex, CONTENT_COLUMN, contentItem);
+        }        
     }
-    m_ui->tableWidget->verticalHeader()->setResizeMode(QHeaderView::ResizeToContents);
-    m_ui->tableWidget->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
-    m_ui->tableWidget->horizontalHeader()->setResizeMode(QHeaderView::Interactive);
+
+    m_model->sort(TAG_COLUMN, Qt::AscendingOrder);
+    m_ui->treeView->setModel(m_model);
+
+    m_ui->treeView->expandAll();
 }
 
 ProjectWidget::~ProjectWidget()
@@ -31,64 +63,6 @@ ProjectWidget::~ProjectWidget()
 const VCardProject& ProjectWidget::getProject() const
 {
    return *m_project;
-}
-
-void ProjectWidget::updateVCard(int row, const VCard& vCard)
-{
-   if (row >= m_ui->tableWidget->rowCount())
-   {
-      m_ui->tableWidget->setRowCount(row + 1);
-   }
-   for (int col = 0; col < m_ui->tableWidget->columnCount(); ++col)
-   {
-      QTableWidgetItem* item = new QTableWidgetItem();
-      m_ui->tableWidget->setItem(row, col, item);
-   }
-   for (int index = 0; index < vCard.getTagCount(); ++index)
-   {
-      QString tag = vCard.getTag(index);
-      QString content = vCard.getTagContent(index);
-      updateTag(row, tag, content);
-   }
-}
-
-void ProjectWidget::updateTag(int row, const QString& tag, const QString& content)
-{
-   int col = getTagColumn(tag);
-   QTableWidgetItem* item = m_ui->tableWidget->item(row, col);
-   if (item == 0)
-   {
-      item = new QTableWidgetItem();
-      m_ui->tableWidget->setItem(row, col, item);
-   }
-   QString text = item->text();
-   if (!text.isEmpty())
-   {
-      text.append("; ");
-   }
-   text.append(content);
-   item->setText(text);
-}
-
-int ProjectWidget::getTagColumn(const QString& tag)
-{
-   for(int col = 0; col < m_ui->tableWidget->columnCount(); ++col)
-   {
-      QTableWidgetItem* headItem = m_ui->tableWidget->horizontalHeaderItem(col);
-      if (headItem->text() == tag)
-      {
-         return col;
-      }
-   }
-   int col = m_ui->tableWidget->columnCount();
-   m_ui->tableWidget->setColumnCount(col + 1);
-   m_ui->tableWidget->setHorizontalHeaderItem(col, new QTableWidgetItem(tag));
-   if ((QString::compare("BEGIN", tag, Qt::CaseInsensitive) == 0) ||
-       (QString::compare("END", tag, Qt::CaseInsensitive) == 0))
-   {
-      m_ui->tableWidget->hideColumn(col);
-   }
-   return col;
 }
 
 void ProjectWidget::changeEvent(QEvent *e)
@@ -103,3 +77,37 @@ void ProjectWidget::changeEvent(QEvent *e)
     }
 }
 
+///
+
+ProjectWidget::SortModel::SortModel(QObject* parent) :
+        QSortFilterProxyModel(parent)
+{
+
+}
+
+bool ProjectWidget::SortModel::lessThan(const QModelIndex &left, const QModelIndex &right)
+{
+    if (!left.parent().isValid() && !right.parent().isValid())
+    {
+        QModelIndex leftTagIndex = left.sibling(TAG_COLUMN, left.column());
+        QModelIndex rightTagIndex = right.sibling(TAG_COLUMN, right.column());
+        return (leftTagIndex.data().toString() < rightTagIndex.data().toString());
+    }
+    if (left.parent().isValid() && right.parent().isValid())
+    {
+        QModelIndex leftTagIndex = left.sibling(TAG_COLUMN, left.column());
+        QModelIndex rightTagIndex = right.sibling(TAG_COLUMN, right.column());
+        if (leftTagIndex.data().toString() < rightTagIndex.data().toString())
+        {
+            return true;
+        }
+        if (leftTagIndex.data().toString() > rightTagIndex.data().toString())
+        {
+            return true;
+        }
+        QModelIndex leftPropertiesIndex = left.sibling(PROPERTIES_COLUMN, left.column());
+        QModelIndex rightPropertiesIndex = right.sibling(PROPERTIES_COLUMN, right.column());
+        return (leftPropertiesIndex.data().toString() < rightPropertiesIndex.data().toString());
+    }
+    return QSortFilterProxyModel::lessThan(left, right);
+}

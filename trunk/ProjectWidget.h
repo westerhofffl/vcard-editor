@@ -7,7 +7,7 @@ namespace Ui {
 
 class VCardProject;
 class VCard;
-
+#include <QSortFilterProxyModel>
 #include <QWidget>
 
 
@@ -20,20 +20,39 @@ public:
 
    const VCardProject& getProject() const;
 
+   void updateProjectView();
+
 protected:
    void changeEvent(QEvent *e);
 
 private:
-   void updateVCard(int row,
-                    const VCard& vCard);
-   void updateTag(int row,
-                  const QString& tag,
-                  const QString& content);
-   int getTagColumn(const QString& tag);
 
 private:
    Ui::ProjectWidget* m_ui;
    VCardProject* m_project;
+
+   enum Columns
+   {
+       TAG_COLUMN,
+       PROPERTIES_COLUMN,
+       CONTENT_COLUMN,
+       COLUMN_COUNT
+   };
+
+   QSortFilterProxyModel* m_model;
+
+   ///
+
+   class SortModel : public QSortFilterProxyModel
+   {
+   public:
+       SortModel(QObject* parent);
+
+   protected:
+       bool lessThan(const QModelIndex &left, const QModelIndex &right);
+
+
+   };
 };
 
 #endif // PROJECTWIDGET_H

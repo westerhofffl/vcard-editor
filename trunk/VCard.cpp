@@ -10,8 +10,15 @@ VCard::VCard(const QString& content)
       QTextStream textStream(&contentString);
       QString wholeLine;
       QString singleLine;
-      do {
+      forever
+      {
           singleLine = textStream.readLine();
+          if (singleLine.isNull())
+          {
+              break;
+          }
+          QByteArray asciiByteArray = singleLine.toAscii();
+          singleLine = QString::fromUtf8(asciiByteArray.data(), asciiByteArray.size()).trimmed();
           wholeLine.append(singleLine);
           if (!wholeLine.endsWith('='))
           {
@@ -26,7 +33,7 @@ VCard::VCard(const QString& content)
           {
              wholeLine.remove(wholeLine.length() - 1, 1);
           }
-      } while (!singleLine.isNull());
+      }
    }
    else
    {
@@ -39,59 +46,114 @@ QString VCard::getContent() const
    return m_contentList.join("\n");
 }
 
+QString VCard::getSummary() const
+{
+    QList<int> nameIndexList = getTagIndexList("N");
+    QStringList nameStringList;
+    foreach(int nameIndex, nameIndexList)
+    {
+        nameStringList.append(getTagContent(nameIndex));
+    }
+
+    QList<int> fullNameIndexList = getTagIndexList("FN");
+    QStringList fullNameStringList;
+    foreach(int nameIndex, fullNameIndexList)
+    {
+        fullNameStringList.append(getTagContent(nameIndex));
+    }
+
+    QString summary = QString("%1 (%2)").arg(fullNameStringList.join("/")).arg(nameStringList.join("/"));
+    return summary;
+}
+
 int VCard::getTagCount() const
 {
    return m_contentList.length();
 }
-QString VCard::getTag(int index) const
+QString VCard::getCompleteTag(int index) const
 {
    if ((index >= 0) && (index < m_contentList.length()))
    {
       QString line = m_contentList.at(index);
-      int colonIndex = line.indexOf(':');
-      return line.left(colonIndex);
+      QString completeTag = line.section(':', 0, 0);
+      return completeTag;
    }
    return QString();
 }
+QString VCard::getTag(int index) const
+{
+    QString completeTag = getCompleteTag(index);
+    return completeTag.section(';', 0, 0);
+}
+QStringList VCard::getTagProperties(int index) const
+{
+    QString completeTag = getCompleteTag(index);
+    return completeTag.section(';', 1).split(';');
+}
+
 QString VCard::getTagContent(int index) const
 {
    if ((index >= 0) && (index < m_contentList.length()))
    {
       QString line = m_contentList.at(index);
-      int colonIndex = line.indexOf(':');
-      return line.mid(colonIndex + 1);
+      QString content = line.section(':', 1);
+
+      if (getTagProperties(index).contains("CHARSET=UTF-8", Qt::CaseInsensitive))
+      {
+          QRegExp charRegExp("=([0-9A-Fa-f]{2})");
+          int offset = charRegExp.indexIn(content);
+          while(offset != -1)
+          {
+              QString charCodeString = charRegExp.cap(1);
+              int charCode = charCodeString.toInt(0, 16);
+              content.replace(offset, 3, QChar(charCode));
+              offset = charRegExp.indexIn(content, offset);
+          }          
+      }
+
+      return content;
    }
    return QString();
 }
 
-QString VCard::getTagContent(const QString& tag) const
+QList<int> VCard::getCompleteTagIndexList(const QString& completeTag) const
 {
-   return getTagContent(getTagIndex(tag));
+    QList<int> indexList;
+   for(int index = 0; index < getTagCount(); ++index)
+   {
+      if (getCompleteTag(index) == completeTag)
+      {
+         indexList.append(index);
+      }
+   }
+   return indexList;
 }
-int VCard::getTagIndex(const QString& tag) const
+
+QList<int> VCard::getTagIndexList(const QString& tag) const
 {
+    QList<int> indexList;
    for(int index = 0; index < getTagCount(); ++index)
    {
       if (getTag(index) == tag)
       {
-         return index;
+         indexList.append(index);
       }
    }
-   return -1;
+   return indexList;
 }
 
-void VCard::updateTag(const QString& tag, const QString& tagContent)
+
+void VCard::updateTag(int index, const QString& completeTag, const QString& tagContent)
 {
-   QString line = QString("%1:%2").arg(tag).arg(tagContent);
-   int tagIndex = getTagIndex(tag);
-   if ((tagIndex >= 0) && (tagIndex < m_contentList.length()))
-   {
-      m_contentList[tagIndex] = line;
-   }
-   else
-   {
-      m_contentList.append(line);
-   }
+    QString line = QString("%1:%2").arg(completeTag).arg(tagContent);
+    if ((index >= 0) && (index < m_contentList.length()))
+    {
+       m_contentList[index] = line;
+    }
+    else
+    {
+       m_contentList.append(line);
+    }
 }
 
 void VCard::removeTag(int tagIndex)
@@ -100,10 +162,4 @@ void VCard::removeTag(int tagIndex)
    {
       m_contentList.removeAt(tagIndex);
    }
-}
-
-void VCard::removeTag(const QString& tag)
-{
-   int tagIndex = getTagIndex(tag);
-   removeTag(tagIndex);
 }
