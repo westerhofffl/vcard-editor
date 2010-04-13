@@ -38,6 +38,7 @@ private slots:
 
     void updateTagData();
     void updateButtons();
+    void showSelectedDuplicates();
 
 private:
     int getVCardId(const QModelIndex& index) const;
@@ -55,7 +56,8 @@ private:
        COLUMN_COUNT
    };
 
-   QSortFilterProxyModel* m_model;
+   class SortModel;
+   SortModel* m_model;
 
    ///
 
@@ -64,8 +66,15 @@ private:
    public:
        SortModel(QObject* parent);
 
+       void setFilteredContent(const QString& content);
+
    protected:
        bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
+
+       bool filterAcceptsColumn ( int source_column, const QModelIndex & source_parent ) const;
+       bool filterAcceptsRow ( int source_row, const QModelIndex & source_parent ) const;
+   private:
+       QString m_filteredContent;
    };
 
 };

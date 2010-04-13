@@ -136,8 +136,12 @@
      </layout>
     </widget>
    </item>
-   <item row="1" column="0" colspan="4">
-    <widget class="QTreeView" name="duplicatesTreeView"/>
+   <item row="1" column="0" colspan="5">
+    <widget class="QTreeView" name="duplicatesTreeView">
+     <property name="rootIsDecorated">
+      <bool>false</bool>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
