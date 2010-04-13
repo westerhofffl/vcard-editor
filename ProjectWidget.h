@@ -13,6 +13,8 @@ class VCard;
 
 class ProjectWidget : public QWidget
 {
+    Q_OBJECT
+
 public:
    ProjectWidget(VCardProject* project, QWidget *parent);
 
@@ -25,7 +27,18 @@ public:
 protected:
    void changeEvent(QEvent *e);
 
+private slots:
+    void on_removeTagButton_clicked();
+    void on_insertTagButton_clicked();
+    void on_removeVCardButton_clicked();
+    void on_addVCardButton_clicked();
+    void on_expandButton_clicked();
+
+    void updateButtons();
+
 private:
+    int getVCardId(const QModelIndex& index) const;
+    int getTagIndex(const QModelIndex& index) const;
 
 private:
    Ui::ProjectWidget* m_ui;
@@ -49,10 +62,9 @@ private:
        SortModel(QObject* parent);
 
    protected:
-       bool lessThan(const QModelIndex &left, const QModelIndex &right);
-
-
+       bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
    };
+
 };
 
 #endif // PROJECTWIDGET_H

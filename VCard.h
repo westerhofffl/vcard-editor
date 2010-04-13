@@ -22,6 +22,7 @@ public:
     QList<int> getCompleteTagIndexList(const QString& completeTag) const;
     QList<int> getTagIndexList(const QString& tag) const;
 
+    void insertTag(int index);
     void updateTag(int index, const QString& completeTag, const QString& tagContent);
     void removeTag(int tagIndex);
 

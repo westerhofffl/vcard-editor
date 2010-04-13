@@ -7,10 +7,16 @@ SOURCES += main.cpp \
     MainWindow.cpp \
     VCard.cpp \
     VCardProject.cpp \
-    ProjectWidget.cpp
+    ProjectWidget.cpp \
+    NewVCardDialog.cpp \
+    NewTagDialog.cpp
 HEADERS += MainWindow.h \
     VCard.h \
     VCardProject.h \
-    ProjectWidget.h
+    ProjectWidget.h \
+    NewVCardDialog.h \
+    NewTagDialog.h
 FORMS += MainWindow.ui \
-    ProjectWidget.ui
+    ProjectWidget.ui \
+    NewVCardDialog.ui \
+    NewTagDialog.ui

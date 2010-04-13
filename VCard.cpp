@@ -9,16 +9,13 @@ VCard::VCard(const QString& content)
       QString contentString(content);
       QTextStream textStream(&contentString);
       QString wholeLine;
-      QString singleLine;
       forever
       {
-          singleLine = textStream.readLine();
+          QString singleLine = textStream.readLine();
           if (singleLine.isNull())
           {
               break;
           }
-          QByteArray asciiByteArray = singleLine.toAscii();
-          singleLine = QString::fromUtf8(asciiByteArray.data(), asciiByteArray.size()).trimmed();
           wholeLine.append(singleLine);
           if (!wholeLine.endsWith('='))
           {
@@ -110,6 +107,8 @@ QString VCard::getTagContent(int index) const
               offset = charRegExp.indexIn(content, offset);
           }          
       }
+      QByteArray asciiByteArray = content.toAscii();
+      content = QString::fromUtf8(asciiByteArray.data(), asciiByteArray.size()).trimmed();
 
       return content;
    }
@@ -142,6 +141,11 @@ QList<int> VCard::getTagIndexList(const QString& tag) const
    return indexList;
 }
 
+
+void VCard::insertTag(int index)
+{
+    m_contentList.insert(index, "");
+}
 
 void VCard::updateTag(int index, const QString& completeTag, const QString& tagContent)
 {
