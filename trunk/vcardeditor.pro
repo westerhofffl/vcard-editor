@@ -5,12 +5,12 @@ TARGET = vcardeditor
 TEMPLATE = app
 SOURCES += main.cpp \
     MainWindow.cpp \
-    NewProjectDialog.cpp \
     VCard.cpp \
-    VCardProject.cpp
+    VCardProject.cpp \
+    ProjectWidget.cpp
 HEADERS += MainWindow.h \
-    NewProjectDialog.h \
     VCard.h \
-    VCardProject.h
+    VCardProject.h \
+    ProjectWidget.h
 FORMS += MainWindow.ui \
-    NewProjectDialog.ui
+    ProjectWidget.ui
