@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     connect(ui->actionNew_project, SIGNAL(triggered()), SLOT(addNewProject()));
+    connect(ui->actionOpen_project, SIGNAL(triggered()), SLOT(openProject()));
 }
 
 MainWindow::~MainWindow()
@@ -22,6 +23,17 @@ void MainWindow::addNewProject()
 {
    QString fileName =
          QFileDialog::getSaveFileName(this, "Choose the target location", "", "*.vcf");
+   if (!fileName.isEmpty())
+   {
+      QFile file(fileName);
+      showProject(new VCardProject(file));
+   }
+}
+
+void MainWindow::openProject()
+{
+   QString fileName = "G:\\pcsc_pcsc_00001.vcf";
+         //QFileDialog::getOpenFileName(this, "Choose the target location", "", "*.vcf");
    if (!fileName.isEmpty())
    {
       QFile file(fileName);

@@ -20,7 +20,7 @@ protected:
 
 private slots:
     void addNewProject();
-//    void openProject();
+    void openProject();
 //    void saveProject();
 //    void saveProjectAs();
 

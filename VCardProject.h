@@ -15,7 +15,7 @@ public:
         VER_3_0
     };
 
-    VCardProject(const QFile& file);
+    VCardProject(QFile& file);
 
     QString getAbsoluteFilePath() const;
     QString getFileName() const;

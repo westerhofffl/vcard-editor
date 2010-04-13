@@ -6,6 +6,7 @@ namespace Ui {
 }
 
 class VCardProject;
+class VCard;
 
 #include <QWidget>
 
@@ -21,6 +22,14 @@ public:
 
 protected:
    void changeEvent(QEvent *e);
+
+private:
+   void updateVCard(int row,
+                    const VCard& vCard);
+   void updateTag(int row,
+                  const QString& tag,
+                  const QString& content);
+   int getTagColumn(const QString& tag);
 
 private:
    Ui::ProjectWidget* m_ui;
