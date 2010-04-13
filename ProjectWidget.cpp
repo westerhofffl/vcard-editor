@@ -157,7 +157,7 @@ bool ProjectWidget::SortModel::filterAcceptsRow ( int source_row, const QModelIn
     }
 
     QAbstractItemModel* dataModel = sourceModel();
-    QModelIndex vCardIndex = mapToSource(index(source_row, TAG_COLUMN));
+    QModelIndex vCardIndex = dataModel->index(source_row, TAG_COLUMN);
     for (int childRow = 0; childRow < dataModel->rowCount(vCardIndex); ++childRow)
     {
         QModelIndex contentIndex = dataModel->index(childRow, CONTENT_COLUMN, vCardIndex);
