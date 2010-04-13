@@ -6,6 +6,7 @@
 #include "NewTagDialog.h"
 
 #include <QMessageBox>
+#include <QScrollBar>
 #include <QStandardItemModel>
 
 ProjectWidget::ProjectWidget(VCardProject* project, QWidget *parent) :
@@ -22,6 +23,7 @@ ProjectWidget::ProjectWidget(VCardProject* project, QWidget *parent) :
 
 void ProjectWidget::updateProjectView()
 {
+    int vScrollPos = m_ui->treeView->verticalScrollBar()->value();
     delete m_model;
     m_model = new SortModel(m_ui->treeView);
 
@@ -38,6 +40,7 @@ void ProjectWidget::updateProjectView()
 
         QStandardItem* item = new QStandardItem(vCard.getSummary());
         item->setData(id, Qt::UserRole);
+        item->setFlags(item->flags() & ~Qt::ItemIsEditable);
         item->setRowCount(vCard.getTagCount());
         item->setColumnCount(COLUMN_COUNT);
         dataModel->setItem(row, item);
@@ -65,6 +68,9 @@ void ProjectWidget::updateProjectView()
     m_ui->treeView->expandAll();
 
     connect(m_ui->treeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), SLOT(updateButtons()));
+    connect(m_model, SIGNAL(dataChanged(QModelIndex,QModelIndex)), SLOT(updateTagData()));
+
+    m_ui->treeView->verticalScrollBar()->setValue(vScrollPos);
 }
 
 ProjectWidget::~ProjectWidget()
@@ -220,6 +226,32 @@ void ProjectWidget::on_removeTagButton_clicked()
     }
     vCard.removeTag(tagIndex);
     m_project->updateVCard(vCardId, vCard);
+    updateProjectView();
+}
+
+void ProjectWidget::updateTagData()
+{
+    QModelIndex currentIndex = m_ui->treeView->currentIndex();
+    int vCardId = getVCardId(currentIndex);
+    VCard vCard = m_project->getVCard(vCardId);
+    int tagIndex = getTagIndex(currentIndex);
+    QString oldTag = vCard.getTag(tagIndex);
+    if ((oldTag.compare("BEGIN", Qt::CaseInsensitive) == 0) ||
+        (oldTag.compare("END", Qt::CaseInsensitive) == 0) ||
+        (oldTag.compare("VERSION", Qt::CaseInsensitive) == 0))
+    {
+        QMessageBox::warning(this, "Warning", QString("Tag '%1' cannot be changed!").arg(oldTag));
+    }
+    else
+    {
+        QString tag = currentIndex.sibling(currentIndex.row(), TAG_COLUMN).data().toString();
+        QString properties = currentIndex.sibling(currentIndex.row(), PROPERTIES_COLUMN).data().toString();
+        QString completeTag = QString("%1;%2").arg(tag).arg(properties);
+        QString content = currentIndex.sibling(currentIndex.row(), CONTENT_COLUMN).data().toString();
+        vCard.updateTag(tagIndex, completeTag, content);
+        m_project->updateVCard(vCardId, vCard);
+    }
+
     updateProjectView();
 }
 
