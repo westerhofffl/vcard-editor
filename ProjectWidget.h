@@ -34,6 +34,7 @@ private slots:
     void on_addVCardButton_clicked();
     void on_expandButton_clicked();
 
+    void updateTagData();
     void updateButtons();
 
 private:
