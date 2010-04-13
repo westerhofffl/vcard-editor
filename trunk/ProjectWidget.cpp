@@ -105,6 +105,12 @@ ProjectWidget::SortModel::SortModel(QObject* parent) :
 
 }
 
+void ProjectWidget::SortModel::setFilteredContent(const QString& content)
+{
+    m_filteredContent = content;
+    invalidateFilter();
+}
+
 bool ProjectWidget::SortModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
 {
     if (!left.parent().isValid() && !right.parent().isValid())
@@ -132,6 +138,36 @@ bool ProjectWidget::SortModel::lessThan(const QModelIndex &left, const QModelInd
     }
 
     return QSortFilterProxyModel::lessThan(left, right);
+}
+
+
+bool ProjectWidget::SortModel::filterAcceptsColumn ( int source_column, const QModelIndex & source_parent ) const
+{
+    return true;
+}
+bool ProjectWidget::SortModel::filterAcceptsRow ( int source_row, const QModelIndex & source_parent ) const
+{
+    if (m_filteredContent.isEmpty())
+    {
+        return true;
+    }
+    if (source_parent.isValid())
+    {
+        return true;
+    }
+
+    QAbstractItemModel* dataModel = sourceModel();
+    QModelIndex vCardIndex = mapToSource(index(source_row, TAG_COLUMN));
+    for (int childRow = 0; childRow < dataModel->rowCount(vCardIndex); ++childRow)
+    {
+        QModelIndex contentIndex = dataModel->index(childRow, CONTENT_COLUMN, vCardIndex);
+        QString content = contentIndex.data().toString();
+        if (content == m_filteredContent)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 void ProjectWidget::on_expandButton_clicked()
@@ -267,6 +303,23 @@ void ProjectWidget::updateButtons()
     m_ui->removeTagButton->setEnabled(currentIndex.isValid());
 }
 
+void ProjectWidget::showSelectedDuplicates()
+{
+    QModelIndex currentIndex = m_ui->duplicatesTreeView->currentIndex();
+    if (!currentIndex.isValid())
+    {
+        m_model->setFilteredContent("");
+        return;
+    }
+    QModelIndex contentIndex= currentIndex.sibling(currentIndex.row(), 0);
+    QString content = contentIndex.data(Qt::UserRole).toString();
+    m_model->setFilteredContent(content);
+    if (!content.isEmpty())
+    {
+        m_ui->treeView->expandAll();
+    }
+}
+
 int ProjectWidget::getVCardId(const QModelIndex& index) const
 {
     if (!index.isValid())
@@ -300,12 +353,82 @@ int ProjectWidget::getTagIndex(const QModelIndex& index) const\
 
 void ProjectWidget::on_showDuplicatesButton_clicked()
 {
+    //QMultiHash<content, QPair<vCardId, tagIndex> >
+    QMap<QString, int> duplicatesMap;
+
+    QList<int> idList = m_project->getVCardIdList();
+
+    for(int row = 0; row < idList.size(); ++row)
+    {
+        int id = idList[row];
+        VCard vCard = m_project->getVCard(id);
+        for(int tagIndex = 0; tagIndex < vCard.getTagCount(); ++tagIndex)
+        {
+            QString tag = vCard.getTag(tagIndex);
+            if ((tag.compare("BEGIN", Qt::CaseInsensitive) == 0) ||
+                (tag.compare("END", Qt::CaseInsensitive) == 0) ||
+                (tag.compare("VERSION", Qt::CaseInsensitive) == 0))
+            {
+                continue;
+            }
+            QString content = vCard.getTagContent(tagIndex);
+            if (duplicatesMap.contains(content))
+            {
+                duplicatesMap[content]++;
+            }
+            else
+            {
+                duplicatesMap[content] = 1;
+            }
+        }
+    }
+    foreach(QString content, duplicatesMap.keys())
+    {
+        if (duplicatesMap[content] == 1)
+        {
+            duplicatesMap.remove(content);
+        }
+    }
+
+    QStandardItemModel* duplicatesModel = new QStandardItemModel(duplicatesMap.size(), 2, m_ui->duplicatesTreeView);
+    QList<QString> duplicatesList = duplicatesMap.keys();
+    for(int row = 0; row < duplicatesList.length(); ++row)
+    {
+        QString content = duplicatesList[row];
+        QStandardItem* contentItem = new QStandardItem(content.simplified());
+        contentItem->setData(content, Qt::UserRole);
+        duplicatesModel->setItem(row, 0, contentItem);
+        QStandardItem* countItem = new QStandardItem(QString::number(duplicatesMap[content]));
+        duplicatesModel->setItem(row, 1, countItem);
+    }
+    QStandardItem* showAllItem = new QStandardItem("Show all entries");
+    duplicatesModel->insertRow(0);
+    duplicatesModel->setItem(0, showAllItem);
+
+    m_ui->duplicatesTreeView->setModel(duplicatesModel);
+    m_ui->duplicatesTreeView->setCurrentIndex(duplicatesModel->index(0, 0));
+    m_ui->duplicatesTreeView->header()->setResizeMode(0, QHeaderView::Stretch);
+
     m_ui->duplicatesTreeView->show();
     m_ui->duplicatesButtonStackedWidget->setCurrentWidget(m_ui->hideDuplicatesPage);
+
+    showSelectedDuplicates();
+
+    connect(m_ui->duplicatesTreeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
+            SLOT(showSelectedDuplicates()));
 }
 
 void ProjectWidget::on_hideDuplicatesButton_clicked()
 {
+    QStandardItemModel* duplicatesModel = new QStandardItemModel(1, 2, m_ui->duplicatesTreeView);
+    QStandardItem* showAllItem = new QStandardItem("Show all entries");
+    duplicatesModel->setItem(0, showAllItem);    
+
+    m_ui->duplicatesTreeView->setModel(duplicatesModel);
+    m_ui->duplicatesTreeView->setCurrentIndex(duplicatesModel->index(0, 0));
+
     m_ui->duplicatesTreeView->hide();
     m_ui->duplicatesButtonStackedWidget->setCurrentWidget(m_ui->showDuplicatesPage);
+
+    showSelectedDuplicates();
 }
