@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+class VCardProject;
+
 namespace Ui {
     class MainWindow;
 }
@@ -18,12 +20,15 @@ protected:
 
 private slots:
     void addNewProject();
-    void openProject();
-    void saveProject();
-    void saveProjectAs();
+//    void openProject();
+//    void saveProject();
+//    void saveProjectAs();
 
-    void importVCards();
-    void exportVCards();
+//    void importVCards();
+//    void exportVCards();
+
+private:
+    void showProject(VCardProject* project);
 
 private:
     Ui::MainWindow *ui;

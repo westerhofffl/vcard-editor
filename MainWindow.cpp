@@ -1,6 +1,8 @@
 #include "MainWindow.h"
+#include "ProjectWidget.h"
 #include "ui_MainWindow.h"
-#include "NewProjectDialog.h"
+#include "VCardProject.h"
+#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -18,11 +20,19 @@ MainWindow::~MainWindow()
 
 void MainWindow::addNewProject()
 {
-    NewProjectDialog newProjectDialog(this);
-    if (newProjectDialog.exec() == QDialog::Accepted)
-    {
+   QString fileName =
+         QFileDialog::getSaveFileName(this, "Choose the target location", "", "*.vcf");
+   if (!fileName.isEmpty())
+   {
+      QFile file(fileName);
+      showProject(new VCardProject(file));
+   }
+}
 
-    }
+void MainWindow::showProject(VCardProject* project)
+{
+   ProjectWidget* projectWidget = new ProjectWidget(project, this);
+   ui->tabWidget->addTab(projectWidget, project->getFileName());
 }
 
 void MainWindow::changeEvent(QEvent *e)
