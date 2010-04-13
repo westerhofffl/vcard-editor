@@ -12,6 +12,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->actionNew_project, SIGNAL(triggered()), SLOT(addNewProject()));
     connect(ui->actionOpen_project, SIGNAL(triggered()), SLOT(openProject()));
+
+    openProject();
 }
 
 MainWindow::~MainWindow()
@@ -32,7 +34,8 @@ void MainWindow::addNewProject()
 
 void MainWindow::openProject()
 {
-   QString fileName = "G:\\pcsc_pcsc_00001.vcf";
+   QString fileName = "/home/gogi/Downloads/pcsc_pcsc_00001.vcf";
+         //"G:\\pcsc_pcsc_00001.vcf";
          //QFileDialog::getOpenFileName(this, "Choose the target location", "", "*.vcf");
    if (!fileName.isEmpty())
    {

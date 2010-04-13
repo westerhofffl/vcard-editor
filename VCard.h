@@ -11,15 +11,19 @@ public:
 
     QString getContent() const;
 
-    int getTagCount() const;
-    QString getTag(int index) const;
-    QString getTagContent(int index) const;
-    QString getTagContent(const QString& tag) const;
-    int getTagIndex(const QString& tag) const;
+    QString getSummary() const;
 
-    void updateTag(const QString& tag, const QString& tagContent);
+    int getTagCount() const;
+    QString getCompleteTag(int index) const;
+    QString getTag(int index) const;
+    QStringList getTagProperties(int index) const;
+    QString getTagContent(int index) const;
+
+    QList<int> getCompleteTagIndexList(const QString& completeTag) const;
+    QList<int> getTagIndexList(const QString& tag) const;
+
+    void updateTag(int index, const QString& completeTag, const QString& tagContent);
     void removeTag(int tagIndex);
-    void removeTag(const QString& tag);
 
 private:
    QStringList m_contentList;
