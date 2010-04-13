@@ -28,6 +28,8 @@ protected:
    void changeEvent(QEvent *e);
 
 private slots:
+    void on_hideDuplicatesButton_clicked();
+    void on_showDuplicatesButton_clicked();
     void on_removeTagButton_clicked();
     void on_insertTagButton_clicked();
     void on_removeVCardButton_clicked();
