@@ -8,11 +8,25 @@ VCard::VCard(const QString& content)
    {
       QString contentString(content);
       QTextStream textStream(&contentString);
-      QString line;
+      QString wholeLine;
+      QString singleLine;
       do {
-          line = textStream.readLine();
-          m_contentList.append(line);
-      } while (!line.isNull());
+          singleLine = textStream.readLine();
+          wholeLine.append(singleLine);
+          if (!wholeLine.endsWith('='))
+          {
+             wholeLine = wholeLine.trimmed();
+             if (!wholeLine.isEmpty())
+             {
+                m_contentList.append(wholeLine);
+             }
+             wholeLine.clear();
+          }
+          else
+          {
+             wholeLine.remove(wholeLine.length() - 1, 1);
+          }
+      } while (!singleLine.isNull());
    }
    else
    {

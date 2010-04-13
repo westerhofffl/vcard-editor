@@ -3,10 +3,24 @@
 #include "VCard.h"
 #include <QFile>
 #include <QString>
+#include <QRegExp>
 
-VCardProject::VCardProject(const QFile& file)
+VCardProject::VCardProject(QFile& file)
 {
    m_absoluteFilePath = file.fileName();
+   file.open(QIODevice::ReadOnly);
+   QString content = QString::fromLatin1(file.readAll());
+
+   QRegExp cardRegExp("(BEGIN:VCARD.*END:VCARD)");
+   cardRegExp.setCaseSensitivity(Qt::CaseInsensitive);
+   cardRegExp.setMinimal(true);
+   int offset = 0;
+   while(cardRegExp.indexIn(content, offset, QRegExp::CaretAtOffset) != -1)
+   {
+      QString cardString = cardRegExp.cap();
+      m_vCardList.append(cardString);
+      offset += cardString.length();
+   }
 }
 
 QString VCardProject::getAbsoluteFilePath() const
