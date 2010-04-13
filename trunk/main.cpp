@@ -6,6 +6,6 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     a.setStyle(new QPlastiqueStyle());
     MainWindow w;
-    w.show();
+    w.showMinimized();
     return a.exec();
 }
