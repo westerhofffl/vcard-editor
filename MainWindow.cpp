@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
           //"/home/gogi/Downloads/pcsc_pcsc_00001.vcf";
           "G:\\pcsc_pcsc_00001.vcf";
     QFile file(fileName);
-    showProject(new VCardProject(file));
+    //showProject(new VCardProject(file));
 }
 
 MainWindow::~MainWindow()

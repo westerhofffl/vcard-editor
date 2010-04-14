@@ -14,13 +14,17 @@ VCardProject::VCardProject(QFile& file)
    QRegExp cardRegExp("(BEGIN:VCARD.*END:VCARD)");
    cardRegExp.setCaseSensitivity(Qt::CaseInsensitive);
    cardRegExp.setMinimal(true);
-   int offset = 0;
+   int offset = cardRegExp.indexIn(content, offset, QRegExp::CaretAtOffset);
    int id = 1;
-   while(cardRegExp.indexIn(content, offset, QRegExp::CaretAtOffset) != -1)
+   while(offset != -1)
    {
       QString cardString = cardRegExp.cap();
+      if (cardString.contains("etno", Qt::CaseInsensitive))
+      {
+          int a =0;
+      }
       m_vCardContentMap[id]= cardString;
-      offset += cardString.length();
+      offset = cardRegExp.indexIn(content, offset + cardString.length(), QRegExp::CaretAtOffset);
       ++id;
    }
 }
