@@ -33,6 +33,13 @@ public:
        COLUMN_COUNT
    };
 
+   enum DuplicateColumns
+   {
+       TEXT_COLUMN,
+       COUNT_COLUMN,
+       COLUMN_COUNT
+   };
+
 protected:
    void changeEvent(QEvent *e);
 
