@@ -5,11 +5,12 @@ namespace Ui {
     class ProjectWidget;
 }
 
+class ProjectWidgetSortModel;
 class VCardProject;
 class VCard;
-#include <QSortFilterProxyModel>
-#include <QWidget>
 
+class QModelIndex;
+#include <QWidget>
 
 class ProjectWidget : public QWidget
 {
@@ -23,6 +24,14 @@ public:
    const VCardProject& getProject() const;
 
    void updateProjectView();
+
+   enum Columns
+   {
+       TAG_COLUMN,
+       PROPERTIES_COLUMN,
+       CONTENT_COLUMN,
+       COLUMN_COUNT
+   };
 
 protected:
    void changeEvent(QEvent *e);
@@ -49,34 +58,7 @@ private:
    Ui::ProjectWidget* m_ui;
    VCardProject* m_project;
 
-   enum Columns
-   {
-       TAG_COLUMN,
-       PROPERTIES_COLUMN,
-       CONTENT_COLUMN,
-       COLUMN_COUNT
-   };
-
-   class SortModel;
-   SortModel* m_model;
-
-   ///
-
-   class SortModel : public QSortFilterProxyModel
-   {
-   public:
-       SortModel(QObject* parent);
-
-       void setFilteredContent(const QString& content);
-
-   protected:
-       bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
-
-       bool filterAcceptsColumn ( int source_column, const QModelIndex & source_parent ) const;
-       bool filterAcceptsRow ( int source_row, const QModelIndex & source_parent ) const;
-   private:
-       QString m_filteredContent;
-   };
+   ProjectWidgetSortModel* m_model;
 
 };
 

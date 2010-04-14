@@ -9,13 +9,15 @@ SOURCES += main.cpp \
     VCardProject.cpp \
     ProjectWidget.cpp \
     NewVCardDialog.cpp \
-    NewTagDialog.cpp
+    NewTagDialog.cpp \
+    ProjectWidgetSortModel.cpp
 HEADERS += MainWindow.h \
     VCard.h \
     VCardProject.h \
     ProjectWidget.h \
     NewVCardDialog.h \
-    NewTagDialog.h
+    NewTagDialog.h \
+    ProjectWidgetSortModel.h
 FORMS += MainWindow.ui \
     ProjectWidget.ui \
     NewVCardDialog.ui \

@@ -1,4 +1,5 @@
 #include "ProjectWidget.h"
+#include "ProjectWidgetSortModel.h"
 #include "ui_ProjectWidget.h"
 #include "VCard.h"
 #include "VCardProject.h"
@@ -27,7 +28,7 @@ void ProjectWidget::updateProjectView()
 {
     int vScrollPos = m_ui->treeView->verticalScrollBar()->value();
     delete m_model;
-    m_model = new SortModel(m_ui->treeView);
+    m_model = new ProjectWidgetSortModel(m_ui->treeView);
 
     QList<int> idList = m_project->getVCardIdList();
     QStandardItemModel* dataModel = new QStandardItemModel(idList.length(), COLUMN_COUNT, m_model);
@@ -478,70 +479,3 @@ void ProjectWidget::on_hideDuplicatesButton_clicked()
 }
 
 
-///
-
-ProjectWidget::SortModel::SortModel(QObject* parent) :
-        QSortFilterProxyModel(parent)
-{
-
-}
-
-void ProjectWidget::SortModel::setFilteredContent(const QString& content)
-{
-    m_filteredContent = content;
-    invalidateFilter();
-}
-
-bool ProjectWidget::SortModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
-{
-    if (!left.parent().isValid() && !right.parent().isValid())
-    {
-        //top items (summaries) are sorted alphabethically
-        QModelIndex leftSummaryIndex = left.sibling(left.row(), TAG_COLUMN);
-        QString leftSummary = leftSummaryIndex.data().toString();
-        QModelIndex rightSummaryIndex = right.sibling(right.row(), TAG_COLUMN);
-        QString rightSummary = rightSummaryIndex.data().toString();
-        return (leftSummary < rightSummary);
-    }
-    if (left.parent().isValid() && right.parent().isValid())
-    {
-        //tags stay unsorted
-        QModelIndex leftTagIndex = left.sibling(left.row(), TAG_COLUMN);
-        QModelIndex rightTagIndex = right.sibling(right.row(), TAG_COLUMN);
-        return (leftTagIndex.data(Qt::UserRole).toInt() < rightTagIndex.data(Qt::UserRole).toInt());
-    }
-
-    return QSortFilterProxyModel::lessThan(left, right);
-}
-
-
-bool ProjectWidget::SortModel::filterAcceptsColumn(int, const QModelIndex&) const
-{
-    return true;
-}
-
-bool ProjectWidget::SortModel::filterAcceptsRow(int source_row,
-                                                const QModelIndex& source_parent) const
-{
-    if (m_filteredContent.isEmpty())
-    {
-        return true;
-    }
-    if (source_parent.isValid())
-    {
-        return true;
-    }
-
-    QAbstractItemModel* dataModel = sourceModel();
-    QModelIndex vCardIndex = dataModel->index(source_row, TAG_COLUMN);
-    for (int childRow = 0; childRow < dataModel->rowCount(vCardIndex); ++childRow)
-    {
-        QModelIndex contentIndex = dataModel->index(childRow, CONTENT_COLUMN, vCardIndex);
-        QString content = contentIndex.data().toString();
-        if (content == m_filteredContent)
-        {
-            return true;
-        }
-    }
-    return false;
-}
