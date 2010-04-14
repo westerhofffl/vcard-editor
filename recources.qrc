@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/">
+        <file>n.html</file>
+        <file>bday.html</file>
+        <file>fn.html</file>
+        <file>photo.html</file>
+        <file>adr.html</file>
+        <file>email.html</file>
+        <file>label.html</file>
+        <file>mailer.html</file>
+        <file>note.html</file>
+        <file>tel.html</file>
+        <file>begin.html</file>
+        <file>end.html</file>
+        <file>version.html</file>
+    </qresource>
+</RCC>

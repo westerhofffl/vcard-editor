@@ -40,23 +40,45 @@ void ProjectWidget::updateProjectView()
         int id = idList[row];
         VCard vCard = m_project->getVCard(id);
 
-        QStandardItem* item = new QStandardItem(vCard.getSummary());
-        item->setData(id, Qt::UserRole);
-        item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-        item->setRowCount(vCard.getTagCount());
-        item->setColumnCount(COLUMN_COUNT);
-        dataModel->setItem(row, item);
+        QStandardItem* summaryTagItem = new QStandardItem(vCard.getSummary());
+        summaryTagItem->setData(id, Qt::UserRole);
+        summaryTagItem->setFlags(summaryTagItem->flags() & ~Qt::ItemIsEditable);
+        summaryTagItem->setRowCount(vCard.getTagCount());
+        summaryTagItem->setColumnCount(COLUMN_COUNT);
+        dataModel->setItem(row, TAG_COLUMN, summaryTagItem);
+
+        QStandardItem* summaryPropertiesItem = new QStandardItem();
+        summaryPropertiesItem->setFlags(summaryPropertiesItem->flags() & ~Qt::ItemIsEditable);
+        dataModel->setItem(row, PROPERTIES_COLUMN, summaryPropertiesItem);
+        QStandardItem* summaryContentItem = new QStandardItem();
+        summaryContentItem->setFlags(summaryContentItem->flags() & ~Qt::ItemIsEditable);
+        dataModel->setItem(row, CONTENT_COLUMN, summaryContentItem);
 
         for(int tagIndex = 0; tagIndex < vCard.getTagCount(); ++tagIndex)
         {
-            QStandardItem* tagItem = new QStandardItem(vCard.getTag(tagIndex));
+            QString tag = vCard.getTag(tagIndex);
+            QStandardItem* tagItem = new QStandardItem(tag);
             tagItem->setData(tagIndex, Qt::UserRole);
-            item->setChild(tagIndex, TAG_COLUMN, tagItem);
+            if (!VCard::isTagEditable(tag))
+            {
+                tagItem->setForeground(Qt::gray);
+            }
+            summaryTagItem->setChild(tagIndex, TAG_COLUMN, tagItem);
+
             QStandardItem* propertyItem = new QStandardItem(vCard.getTagProperties(tagIndex).join(";"));
-            item->setChild(tagIndex, PROPERTIES_COLUMN, propertyItem);
+            if (!VCard::isContentEditable(tag))
+            {
+                propertyItem->setForeground(Qt::gray);
+            }
+            summaryTagItem->setChild(tagIndex, PROPERTIES_COLUMN, propertyItem);
+
             QStandardItem* contentItem = new QStandardItem(vCard.getTagContent(tagIndex));
-            item->setChild(tagIndex, CONTENT_COLUMN, contentItem);
-        }        
+            if (!VCard::isContentEditable(tag))
+            {
+                contentItem->setForeground(Qt::gray);
+            }
+            summaryTagItem->setChild(tagIndex, CONTENT_COLUMN, contentItem);
+        }
     }
 
     m_model->setSourceModel(dataModel);
@@ -69,7 +91,10 @@ void ProjectWidget::updateProjectView()
 
     m_ui->treeView->expandAll();
 
-    connect(m_ui->treeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), SLOT(updateButtons()));
+    connect(m_ui->treeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
+            SLOT(updateButtons()));
+    connect(m_ui->treeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
+            SLOT(updateTagInfo()));
     connect(m_model, SIGNAL(dataChanged(QModelIndex,QModelIndex)), SLOT(updateTagData()));
 
     m_ui->treeView->verticalScrollBar()->setValue(vScrollPos);
@@ -95,79 +120,6 @@ void ProjectWidget::changeEvent(QEvent *e)
     default:
         break;
     }
-}
-
-///
-
-ProjectWidget::SortModel::SortModel(QObject* parent) :
-        QSortFilterProxyModel(parent)
-{
-
-}
-
-void ProjectWidget::SortModel::setFilteredContent(const QString& content)
-{
-    m_filteredContent = content;
-    invalidateFilter();
-}
-
-bool ProjectWidget::SortModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
-{
-    if (!left.parent().isValid() && !right.parent().isValid())
-    {
-        QModelIndex leftTagIndex = left.sibling(TAG_COLUMN, left.column());
-        QModelIndex rightTagIndex = right.sibling(TAG_COLUMN, right.column());
-        return (leftTagIndex.data().toString() < rightTagIndex.data().toString());
-    }
-    if (left.parent().isValid() && right.parent().isValid())
-    {
-        QModelIndex leftTagIndex = left.sibling(TAG_COLUMN, left.column());
-        QModelIndex rightTagIndex = right.sibling(TAG_COLUMN, right.column());
-        return (leftTagIndex.data(Qt::UserRole).toInt() < rightTagIndex.data(Qt::UserRole).toInt());
-        if (leftTagIndex.data().toString() < rightTagIndex.data().toString())
-        {
-            return true;
-        }
-        if (leftTagIndex.data().toString() > rightTagIndex.data().toString())
-        {
-            return true;
-        }
-        QModelIndex leftPropertiesIndex = left.sibling(PROPERTIES_COLUMN, left.column());
-        QModelIndex rightPropertiesIndex = right.sibling(PROPERTIES_COLUMN, right.column());
-        return (leftPropertiesIndex.data(Qt::UserRole).toInt() < rightPropertiesIndex.data(Qt::UserRole).toInt());
-    }
-
-    return QSortFilterProxyModel::lessThan(left, right);
-}
-
-
-bool ProjectWidget::SortModel::filterAcceptsColumn ( int source_column, const QModelIndex & source_parent ) const
-{
-    return true;
-}
-bool ProjectWidget::SortModel::filterAcceptsRow ( int source_row, const QModelIndex & source_parent ) const
-{
-    if (m_filteredContent.isEmpty())
-    {
-        return true;
-    }
-    if (source_parent.isValid())
-    {
-        return true;
-    }
-
-    QAbstractItemModel* dataModel = sourceModel();
-    QModelIndex vCardIndex = dataModel->index(source_row, TAG_COLUMN);
-    for (int childRow = 0; childRow < dataModel->rowCount(vCardIndex); ++childRow)
-    {
-        QModelIndex contentIndex = dataModel->index(childRow, CONTENT_COLUMN, vCardIndex);
-        QString content = contentIndex.data().toString();
-        if (content == m_filteredContent)
-        {
-            return true;
-        }
-    }
-    return false;
 }
 
 void ProjectWidget::on_expandButton_clicked()
@@ -303,6 +255,16 @@ void ProjectWidget::updateButtons()
     m_ui->removeTagButton->setEnabled(currentIndex.isValid());
 }
 
+void ProjectWidget::updateTagInfo()
+{
+    QModelIndex currentIndex = m_ui->treeView->currentIndex();
+    int vCardId = getVCardId(currentIndex);
+    VCard vCard = m_project->getVCard(vCardId);
+    int tagIndex = getTagIndex(currentIndex);
+    QString tag = vCard.getTag(tagIndex);
+    m_ui->infoTextEdit->setHtml(VCard::getTagInfo(tag));
+}
+
 void ProjectWidget::showSelectedDuplicates()
 {
     QModelIndex currentIndex = m_ui->duplicatesTreeView->currentIndex();
@@ -422,7 +384,7 @@ void ProjectWidget::on_hideDuplicatesButton_clicked()
 {
     QStandardItemModel* duplicatesModel = new QStandardItemModel(1, 2, m_ui->duplicatesTreeView);
     QStandardItem* showAllItem = new QStandardItem("Show all entries");
-    duplicatesModel->setItem(0, showAllItem);    
+    duplicatesModel->setItem(0, showAllItem);
 
     m_ui->duplicatesTreeView->setModel(duplicatesModel);
     m_ui->duplicatesTreeView->setCurrentIndex(duplicatesModel->index(0, 0));
@@ -431,4 +393,73 @@ void ProjectWidget::on_hideDuplicatesButton_clicked()
     m_ui->duplicatesButtonStackedWidget->setCurrentWidget(m_ui->showDuplicatesPage);
 
     showSelectedDuplicates();
+}
+
+
+///
+
+ProjectWidget::SortModel::SortModel(QObject* parent) :
+        QSortFilterProxyModel(parent)
+{
+
+}
+
+void ProjectWidget::SortModel::setFilteredContent(const QString& content)
+{
+    m_filteredContent = content;
+    invalidateFilter();
+}
+
+bool ProjectWidget::SortModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
+{
+    if (!left.parent().isValid() && !right.parent().isValid())
+    {
+        //top items (summaries) are sorted alphabethically
+        QModelIndex leftSummaryIndex = left.sibling(left.row(), TAG_COLUMN);
+        QString leftSummary = leftSummaryIndex.data().toString();
+        QModelIndex rightSummaryIndex = right.sibling(right.row(), TAG_COLUMN);
+        QString rightSummary = rightSummaryIndex.data().toString();
+        return (leftSummary < rightSummary);
+    }
+    if (left.parent().isValid() && right.parent().isValid())
+    {
+        //tags stay unsorted
+        QModelIndex leftTagIndex = left.sibling(left.row(), TAG_COLUMN);
+        QModelIndex rightTagIndex = right.sibling(right.row(), TAG_COLUMN);
+        return (leftTagIndex.data(Qt::UserRole).toInt() < rightTagIndex.data(Qt::UserRole).toInt());
+    }
+
+    return QSortFilterProxyModel::lessThan(left, right);
+}
+
+
+bool ProjectWidget::SortModel::filterAcceptsColumn(int, const QModelIndex&) const
+{
+    return true;
+}
+
+bool ProjectWidget::SortModel::filterAcceptsRow(int source_row,
+                                                const QModelIndex& source_parent) const
+{
+    if (m_filteredContent.isEmpty())
+    {
+        return true;
+    }
+    if (source_parent.isValid())
+    {
+        return true;
+    }
+
+    QAbstractItemModel* dataModel = sourceModel();
+    QModelIndex vCardIndex = dataModel->index(source_row, TAG_COLUMN);
+    for (int childRow = 0; childRow < dataModel->rowCount(vCardIndex); ++childRow)
+    {
+        QModelIndex contentIndex = dataModel->index(childRow, CONTENT_COLUMN, vCardIndex);
+        QString content = contentIndex.data().toString();
+        if (content == m_filteredContent)
+        {
+            return true;
+        }
+    }
+    return false;
 }
