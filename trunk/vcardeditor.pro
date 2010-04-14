@@ -20,3 +20,4 @@ FORMS += MainWindow.ui \
     ProjectWidget.ui \
     NewVCardDialog.ui \
     NewTagDialog.ui
+RESOURCES += recources.qrc

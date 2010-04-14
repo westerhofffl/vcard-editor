@@ -34,8 +34,9 @@ void MainWindow::addNewProject()
 
 void MainWindow::openProject()
 {
-   QString fileName = "/home/gogi/Downloads/pcsc_pcsc_00001.vcf";
-         //"G:\\pcsc_pcsc_00001.vcf";
+   QString fileName =
+         //"/home/gogi/Downloads/pcsc_pcsc_00001.vcf";
+         "G:\\pcsc_pcsc_00001.vcf";
          //QFileDialog::getOpenFileName(this, "Choose the target location", "", "*.vcf");
    if (!fileName.isEmpty())
    {

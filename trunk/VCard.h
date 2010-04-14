@@ -26,6 +26,14 @@ public:
     void updateTag(int index, const QString& completeTag, const QString& tagContent);
     void removeTag(int tagIndex);
 
+    static QString getTag(const QString& completeTag);
+    static QStringList getTagProperties(const QString& completeTag);
+
+    static bool isTagEditable(const QString& tag);
+    static bool isContentEditable(const QString& tag);
+
+    static QString getTagInfo(const QString& tag);
+
 private:
    QStringList m_contentList;
 };

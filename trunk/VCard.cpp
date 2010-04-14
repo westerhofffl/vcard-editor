@@ -1,5 +1,6 @@
 #include "VCard.h"
 
+#include <QFile>
 #include <QTextStream>
 
 VCard::VCard(const QString& content)
@@ -80,13 +81,38 @@ QString VCard::getCompleteTag(int index) const
 QString VCard::getTag(int index) const
 {
     QString completeTag = getCompleteTag(index);
-    return completeTag.section(';', 0, 0);
+    return getTag(completeTag);
 }
 QStringList VCard::getTagProperties(int index) const
 {
     QString completeTag = getCompleteTag(index);
-    return completeTag.section(';', 1).split(';');
+    return getTagProperties(completeTag);
 }
+
+bool VCard::isTagEditable(const QString& tag)
+{
+    if ((tag.compare("BEGIN", Qt::CaseInsensitive) == 0) ||
+        (tag.compare("END", Qt::CaseInsensitive) == 0) ||
+        (tag.compare("VERSION", Qt::CaseInsensitive) == 0) ||
+        (tag.compare("FN", Qt::CaseInsensitive) == 0) ||
+        (tag.compare("N", Qt::CaseInsensitive) == 0))
+    {
+        return false;
+    }
+    return true;
+}
+
+bool VCard::isContentEditable(const QString& tag)
+{
+    if ((tag.compare("BEGIN", Qt::CaseInsensitive) == 0) ||
+        (tag.compare("END", Qt::CaseInsensitive) == 0) ||
+        (tag.compare("VERSION", Qt::CaseInsensitive) == 0))
+    {
+        return false;
+    }
+    return true;
+}
+
 
 QString VCard::getTagContent(int index) const
 {
@@ -105,8 +131,9 @@ QString VCard::getTagContent(int index) const
               int charCode = charCodeString.toInt(0, 16);
               content.replace(offset, 3, QChar(charCode));
               offset = charRegExp.indexIn(content, offset);
-          }          
+          }
       }
+      content.remove(QChar(0x0d));
       QByteArray asciiByteArray = content.toAscii();
       content = QString::fromUtf8(asciiByteArray.data(), asciiByteArray.size()).trimmed();
 
@@ -149,7 +176,9 @@ void VCard::insertTag(int index)
 
 void VCard::updateTag(int index, const QString& completeTag, const QString& tagContent)
 {
-    QString line = QString("%1:%2").arg(completeTag).arg(tagContent);
+    QString updatedTagContent = tagContent;
+    updatedTagContent.replace(QChar(0x0a), QString("=0D=0A"));
+    QString line = QString("%1:%2").arg(completeTag).arg(updatedTagContent);
     if ((index >= 0) && (index < m_contentList.length()))
     {
        m_contentList[index] = line;
@@ -166,4 +195,22 @@ void VCard::removeTag(int tagIndex)
    {
       m_contentList.removeAt(tagIndex);
    }
+}
+
+QString VCard::getTag(const QString& completeTag)
+{
+    return completeTag.section(';', 0, 0);
+}
+
+QStringList VCard::getTagProperties(const QString& completeTag)
+{
+    return  completeTag.section(';', 1).split(';');
+}
+
+QString VCard::getTagInfo(const QString& tag)
+{
+    QString resourceName = QString(":/%1.html").arg(tag.toLower());
+    QFile resourceFile(resourceName);
+    resourceFile.open(QIODevice::ReadOnly);
+    return resourceFile.readAll();
 }
