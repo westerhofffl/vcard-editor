@@ -292,6 +292,22 @@ void ProjectWidget::updateTagInfo()
 
 void ProjectWidget::showSelectedDuplicates()
 {
+    m_model->blockSignals(true);
+    for(int vCardRow = 0; vCardRow < m_model->rowCount(); ++vCardRow)
+    {
+        QModelIndex vCardIndex = m_model->index(vCardRow, TAG_COLUMN);
+        for (int tagRow = 0; tagRow < m_model->rowCount(vCardIndex); ++tagRow)
+        {
+            QModelIndex tagContentIndex =
+                    m_model->index(tagRow, CONTENT_COLUMN, vCardIndex);
+            if (tagContentIndex.data(Qt::ForegroundRole) != Qt::black)
+            {
+                m_model->setData(tagContentIndex, Qt::black, Qt::ForegroundRole);
+            }
+        }
+    }
+    m_model->blockSignals(false);
+
     QModelIndex currentIndex = m_ui->duplicatesTreeView->currentIndex();
     if (!currentIndex.isValid())
     {
@@ -305,6 +321,22 @@ void ProjectWidget::showSelectedDuplicates()
     {
         m_ui->treeView->expandAll();
     }
+
+    m_model->blockSignals(true);
+    for(int vCardRow = 0; vCardRow < m_model->rowCount(); ++vCardRow)
+    {
+        QModelIndex vCardIndex = m_model->index(vCardRow, TAG_COLUMN);
+        for (int tagRow = 0; tagRow < m_model->rowCount(vCardIndex); ++tagRow)
+        {
+            QModelIndex tagContentIndex =
+                    m_model->index(tagRow, CONTENT_COLUMN, vCardIndex);
+            if (tagContentIndex.data().toString() == content)
+            {
+                m_model->setData(tagContentIndex, Qt::red, Qt::ForegroundRole);
+            }
+        }
+    }
+    m_model->blockSignals(false);
 }
 
 int ProjectWidget::getVCardId(const QModelIndex& index) const
