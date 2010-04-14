@@ -12,8 +12,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->actionNew_project, SIGNAL(triggered()), SLOT(addNewProject()));
     connect(ui->actionOpen_project, SIGNAL(triggered()), SLOT(openProject()));
+    connect(ui->actionSave_project, SIGNAL(triggered()), SLOT(saveProject()));
+    connect(ui->actionSave_project_as, SIGNAL(triggered()), SLOT(saveProjectAs()));
 
-    openProject();
+    QString fileName =
+          //"/home/gogi/Downloads/pcsc_pcsc_00001.vcf";
+          "G:\\pcsc_pcsc_00001.vcf";
+    QFile file(fileName);
+    showProject(new VCardProject(file));
 }
 
 MainWindow::~MainWindow()
@@ -35,14 +41,43 @@ void MainWindow::addNewProject()
 void MainWindow::openProject()
 {
    QString fileName =
-         //"/home/gogi/Downloads/pcsc_pcsc_00001.vcf";
-         "G:\\pcsc_pcsc_00001.vcf";
-         //QFileDialog::getOpenFileName(this, "Choose the target location", "", "*.vcf");
+         QFileDialog::getOpenFileName(this, "Choose the target location", "", "*.vcf");
    if (!fileName.isEmpty())
    {
       QFile file(fileName);
       showProject(new VCardProject(file));
    }
+}
+
+void MainWindow::saveProject()
+{
+    QWidget* currentWidget = ui->tabWidget->currentWidget();
+    ProjectWidget* currentProjectWidget = dynamic_cast<ProjectWidget*>(currentWidget);
+    if (currentProjectWidget == 0)
+    {
+        return;
+    }
+    const VCardProject& project = currentProjectWidget->getProject();
+    QFile file(project.getFileName());
+    project.saveTo(file);
+}
+
+void MainWindow::saveProjectAs()
+{
+    QWidget* currentWidget = ui->tabWidget->currentWidget();
+    ProjectWidget* currentProjectWidget = dynamic_cast<ProjectWidget*>(currentWidget);
+    if (currentProjectWidget == 0)
+    {
+        return;
+    }
+    QString fileName =
+          QFileDialog::getSaveFileName(this, "Choose the target location", "", "*.vcf");
+    if (!fileName.isEmpty())
+    {
+       const VCardProject& project = currentProjectWidget->getProject();
+       QFile file(fileName);
+       project.saveTo(file);
+    }
 }
 
 void MainWindow::showProject(VCardProject* project)

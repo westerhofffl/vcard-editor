@@ -21,8 +21,8 @@ protected:
 private slots:
     void addNewProject();
     void openProject();
-//    void saveProject();
-//    void saveProjectAs();
+    void saveProject();
+    void saveProjectAs();
 
 //    void importVCards();
 //    void exportVCards();

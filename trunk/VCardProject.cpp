@@ -25,6 +25,15 @@ VCardProject::VCardProject(QFile& file)
    }
 }
 
+void VCardProject::saveTo(QFile& file) const
+{
+    if (file.open(QIODevice::WriteOnly))
+    {
+        QStringList vCardStringList(m_vCardContentMap.values());
+        file.write(vCardStringList.join("\n").toUtf8());
+    }
+}
+
 QString VCardProject::getAbsoluteFilePath() const
 {
    return m_absoluteFilePath;
