@@ -17,6 +17,7 @@ public:
     };
 
     VCardProject(QFile& file);
+    void saveTo(QFile& file) const;
 
     QString getAbsoluteFilePath() const;
     QString getFileName() const;
