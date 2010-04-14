@@ -164,6 +164,7 @@ void ProjectWidget::on_addVCardButton_clicked()
     {
         on_showDuplicatesButton_clicked();
     }
+    updateButtons();
 }
 
 void ProjectWidget::on_removeVCardButton_clicked()
@@ -177,6 +178,7 @@ void ProjectWidget::on_removeVCardButton_clicked()
     {
         on_showDuplicatesButton_clicked();
     }
+    updateButtons();
 }
 
 void ProjectWidget::on_insertTagButton_clicked()
@@ -211,6 +213,7 @@ void ProjectWidget::on_insertTagButton_clicked()
     {
         on_showDuplicatesButton_clicked();
     }
+    updateButtons();
 }
 
 void ProjectWidget::on_removeTagButton_clicked()
@@ -237,6 +240,7 @@ void ProjectWidget::on_removeTagButton_clicked()
     {
         on_showDuplicatesButton_clicked();
     }
+    updateButtons();
 }
 
 void ProjectWidget::updateTagData()
@@ -268,6 +272,7 @@ void ProjectWidget::updateTagData()
     {
         on_showDuplicatesButton_clicked();
     }
+    updateButtons();
 }
 
 void ProjectWidget::updateButtons()
@@ -276,8 +281,10 @@ void ProjectWidget::updateButtons()
 
     m_ui->addVCardButton->setEnabled(true);
     m_ui->removeVCardButton->setEnabled(currentIndex.isValid());
-    m_ui->insertTagButton->setEnabled(currentIndex.isValid());
-    m_ui->removeTagButton->setEnabled(currentIndex.isValid());
+    m_ui->insertTagButton->setEnabled(currentIndex.isValid() &&
+                                      currentIndex.parent().isValid());
+    m_ui->removeTagButton->setEnabled(currentIndex.isValid() &&
+                                      currentIndex.parent().isValid());
 }
 
 void ProjectWidget::updateTagInfo()
@@ -383,6 +390,7 @@ void ProjectWidget::on_showDuplicatesButton_clicked()
         oldSelectedContent = m_ui->duplicatesTreeView->currentIndex()
                              .data(Qt::UserRole).toString();
     }
+    int oldScrollPos = m_ui->duplicatesTreeView->verticalScrollBar()->value();
 
     for(int row = 0; row < idList.size(); ++row)
     {
@@ -439,6 +447,8 @@ void ProjectWidget::on_showDuplicatesButton_clicked()
         if (index.data(Qt::UserRole).toString() == oldSelectedContent)
         {
             m_ui->duplicatesTreeView->setCurrentIndex(index);
+            m_ui->duplicatesTreeView->verticalScrollBar()->setValue(oldScrollPos);
+            break;
         }
     }
     m_ui->duplicatesTreeView->header()->setResizeMode(0, QHeaderView::Stretch);
