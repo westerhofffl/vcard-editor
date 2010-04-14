@@ -159,6 +159,11 @@ void ProjectWidget::on_addVCardButton_clicked()
         m_project->addVCard(vCard);
         updateProjectView();
     }
+
+    if (m_ui->duplicatesTreeView->isVisibleTo(this))
+    {
+        on_showDuplicatesButton_clicked();
+    }
 }
 
 void ProjectWidget::on_removeVCardButton_clicked()
@@ -167,6 +172,11 @@ void ProjectWidget::on_removeVCardButton_clicked()
     int vCardId = getVCardId(currentIndex);
     m_project->removeVCard(vCardId);
     updateProjectView();
+
+    if (m_ui->duplicatesTreeView->isVisibleTo(this))
+    {
+        on_showDuplicatesButton_clicked();
+    }
 }
 
 void ProjectWidget::on_insertTagButton_clicked()
@@ -196,6 +206,11 @@ void ProjectWidget::on_insertTagButton_clicked()
         m_project->updateVCard(vCardId, vCard);
         updateProjectView();
     }
+
+    if (m_ui->duplicatesTreeView->isVisibleTo(this))
+    {
+        on_showDuplicatesButton_clicked();
+    }
 }
 
 void ProjectWidget::on_removeTagButton_clicked()
@@ -217,6 +232,11 @@ void ProjectWidget::on_removeTagButton_clicked()
     vCard.removeTag(tagIndex);
     m_project->updateVCard(vCardId, vCard);
     updateProjectView();
+
+    if (m_ui->duplicatesTreeView->isVisibleTo(this))
+    {
+        on_showDuplicatesButton_clicked();
+    }
 }
 
 void ProjectWidget::updateTagData()
@@ -243,6 +263,11 @@ void ProjectWidget::updateTagData()
     }
 
     updateProjectView();
+
+    if (m_ui->duplicatesTreeView->isVisibleTo(this))
+    {
+        on_showDuplicatesButton_clicked();
+    }
 }
 
 void ProjectWidget::updateButtons()
@@ -320,6 +345,13 @@ void ProjectWidget::on_showDuplicatesButton_clicked()
 
     QList<int> idList = m_project->getVCardIdList();
 
+    QString oldSelectedContent;
+    if (m_ui->duplicatesTreeView->currentIndex().isValid())
+    {
+        oldSelectedContent = m_ui->duplicatesTreeView->currentIndex()
+                             .data(Qt::UserRole).toString();
+    }
+
     for(int row = 0; row < idList.size(); ++row)
     {
         int id = idList[row];
@@ -327,9 +359,7 @@ void ProjectWidget::on_showDuplicatesButton_clicked()
         for(int tagIndex = 0; tagIndex < vCard.getTagCount(); ++tagIndex)
         {
             QString tag = vCard.getTag(tagIndex);
-            if ((tag.compare("BEGIN", Qt::CaseInsensitive) == 0) ||
-                (tag.compare("END", Qt::CaseInsensitive) == 0) ||
-                (tag.compare("VERSION", Qt::CaseInsensitive) == 0))
+            if (!VCard::isContentEditable(tag))
             {
                 continue;
             }
@@ -346,13 +376,15 @@ void ProjectWidget::on_showDuplicatesButton_clicked()
     }
     foreach(QString content, duplicatesMap.keys())
     {
-        if (duplicatesMap[content] == 1)
+        if ((duplicatesMap[content] == 1) && (content != oldSelectedContent))
         {
             duplicatesMap.remove(content);
         }
     }
 
     QStandardItemModel* duplicatesModel = new QStandardItemModel(duplicatesMap.size(), 2, m_ui->duplicatesTreeView);
+    duplicatesModel->setHorizontalHeaderItem(0, new QStandardItem("Text"));
+    duplicatesModel->setHorizontalHeaderItem(1, new QStandardItem("Count"));
     QList<QString> duplicatesList = duplicatesMap.keys();
     for(int row = 0; row < duplicatesList.length(); ++row)
     {
@@ -369,6 +401,14 @@ void ProjectWidget::on_showDuplicatesButton_clicked()
 
     m_ui->duplicatesTreeView->setModel(duplicatesModel);
     m_ui->duplicatesTreeView->setCurrentIndex(duplicatesModel->index(0, 0));
+    for(int row = 0; row < duplicatesModel->rowCount(); ++row)
+    {
+        QModelIndex index = duplicatesModel->index(row, 0);
+        if (index.data(Qt::UserRole).toString() == oldSelectedContent)
+        {
+            m_ui->duplicatesTreeView->setCurrentIndex(index);
+        }
+    }
     m_ui->duplicatesTreeView->header()->setResizeMode(0, QHeaderView::Stretch);
 
     m_ui->duplicatesTreeView->show();
