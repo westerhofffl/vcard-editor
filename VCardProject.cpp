@@ -14,7 +14,7 @@ VCardProject::VCardProject(QFile& file)
    QRegExp cardRegExp("(BEGIN:VCARD.*END:VCARD)");
    cardRegExp.setCaseSensitivity(Qt::CaseInsensitive);
    cardRegExp.setMinimal(true);
-   int offset = cardRegExp.indexIn(content, offset, QRegExp::CaretAtOffset);
+   int offset = cardRegExp.indexIn(content, 0, QRegExp::CaretAtOffset);
    int id = 1;
    while(offset != -1)
    {
