@@ -21,3 +21,16 @@ FORMS += MainWindow.ui \
     NewVCardDialog.ui \
     NewTagDialog.ui
 RESOURCES += recources.qrc
+OTHER_FILES += tel.html \
+    photo.html \
+    note.html \
+    n.html \
+    mailer.html \
+    label.html \
+    fn.html \
+    end.html \
+    email.html \
+    begin.html \
+    bday.html \
+    adr.html \
+    version.html
