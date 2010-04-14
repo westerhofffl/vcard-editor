@@ -19,10 +19,6 @@ VCardProject::VCardProject(QFile& file)
    while(offset != -1)
    {
       QString cardString = cardRegExp.cap();
-      if (cardString.contains("etno", Qt::CaseInsensitive))
-      {
-          int a =0;
-      }
       m_vCardContentMap[id]= cardString;
       offset = cardRegExp.indexIn(content, offset + cardString.length(), QRegExp::CaretAtOffset);
       ++id;
