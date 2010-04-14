@@ -1,4 +1,5 @@
 #include "ProjectWidget.h"
+#include "ProjectWidgetItemDelegate.h"
 #include "ProjectWidgetSortModel.h"
 #include "ui_ProjectWidget.h"
 #include "VCard.h"
@@ -19,6 +20,8 @@ ProjectWidget::ProjectWidget(VCardProject* project, QWidget *parent) :
     m_ui->setupUi(this);
 
     m_ui->duplicatesTreeView->hide();
+
+   m_ui->treeView->setItemDelegate(new ProjectWidgetItemDelegate(m_ui->treeView));
 
     updateProjectView();
     updateButtons();
