@@ -231,11 +231,14 @@ void ProjectWidget::on_addVCardButton_clicked()
     if (dialog.exec() == QDialog::Accepted)
     {
         VCard vCard;
-        vCard.updateTag(-1, "VERSION", "2.1");
+        vCard.insertTag(1);
+        vCard.updateTag(1, "VERSION", "2.1");
         QString fullName = dialog.getFullName();
-        vCard.updateTag(-1, "FN", fullName);
+        vCard.insertTag(2);
+        vCard.updateTag(2, "FN", fullName);
         QString name = dialog.getName();
-        vCard.updateTag(-1, "N", name);
+        vCard.insertTag(3);
+        vCard.updateTag(3, "N", name);
         createUndoProject();
         m_project->addVCard(vCard);
         updateProjectView();
@@ -347,7 +350,7 @@ void ProjectWidget::updateTagData()
     VCard vCard = m_project->getVCard(vCardId);
     int tagIndex = getTagIndex(currentIndex);
     QString oldTag = vCard.getTag(tagIndex);
-    if (VCard::isTagEditable(oldTag))
+    if ((currentIndex.column() == TAG_COLUMN) && !VCard::isTagEditable(oldTag))
     {
         QMessageBox::warning(this, "Warning",
                              QString("Tag '%1' cannot be changed!").arg(oldTag));
