@@ -16,9 +16,9 @@ ProjectWidget::ProjectWidget(VCardProject* project, QWidget *parent) :
     m_ui(new Ui::ProjectWidget),
     m_project(project),
     m_model(0),
+    m_isProjectModified(false),
     m_undoProject(0),
-    m_redoProject(0),
-    m_isProjectModified(false)
+    m_redoProject(0)
 {
     m_ui->setupUi(this);
 
