@@ -219,16 +219,18 @@ void MainWindow::exportProject()
         }
         QString targetFileName = targetFileNameList.join(" ");
         int fileNameIndex = 1;
-        QFileInfo fileInfo(QDir(targetDir), targetFileName);
+        QFileInfo fileInfo(QDir(targetDir), targetFileName + ".vcf");
         while (fileInfo.exists())
         {
-            fileInfo = QFileInfo(QDir(targetDir), QString("%1_%2")
+            fileInfo = QFileInfo(QDir(targetDir), QString("%1_%2.vcf")
                                  .arg(targetFileName).arg(fileNameIndex));
             ++fileNameIndex;
         }
-        VCardProject singleProject(QFile(fileInfo.absoluteFilePath()));
+        QFile fakeFromProjectFile(fileInfo.absoluteFilePath());
+        VCardProject singleProject(fakeFromProjectFile);
         singleProject.addVCard(vCard);
-        singleProject.saveTo(QFile(fileInfo.absoluteFilePath()));
+        QFile toProjectFile(fileInfo.absoluteFilePath());
+        singleProject.saveTo(toProjectFile);
     }
 }
 
