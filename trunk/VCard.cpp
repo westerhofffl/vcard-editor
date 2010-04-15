@@ -1,6 +1,7 @@
 #include "VCard.h"
 
 #include <QFile>
+#include <QMultiHash>
 #include <QTextStream>
 
 VCard::VCard(const QString& content)
@@ -38,6 +39,7 @@ VCard::VCard(const QString& content)
       m_contentList.append("BEGIN:VCARD");
       m_contentList.append("END:VCARD");
    }
+   checkAmbiguousTags();
 }
 QString VCard::getContent() const
 {
@@ -62,6 +64,11 @@ QString VCard::getSummary() const
 
     QString summary = QString("%1 (%2)").arg(fullNameStringList.join("/")).arg(nameStringList.join("/"));
     return summary;
+}
+
+bool VCard::containsAmbiguousTags() const
+{
+    return !m_ambiguousTagIndexSet.isEmpty();
 }
 
 int VCard::getTagCount() const
@@ -142,6 +149,11 @@ QString VCard::getTagContent(int index) const
    return QString();
 }
 
+bool VCard::isTagAmbiguous(int tagIndex) const
+{
+    return m_ambiguousTagIndexSet.contains(tagIndex);
+}
+
 QList<int> VCard::getCompleteTagIndexList(const QString& completeTag) const
 {
     QList<int> indexList;
@@ -172,6 +184,7 @@ QList<int> VCard::getTagIndexList(const QString& tag) const
 void VCard::insertTag(int index)
 {
     m_contentList.insert(index, "");
+    checkAmbiguousTags();
 }
 
 void VCard::updateTag(int index, const QString& completeTag, const QString& tagContent)
@@ -187,6 +200,7 @@ void VCard::updateTag(int index, const QString& completeTag, const QString& tagC
     {
        m_contentList.append(line);
     }
+    checkAmbiguousTags();
 }
 
 void VCard::removeTag(int tagIndex)
@@ -195,6 +209,7 @@ void VCard::removeTag(int tagIndex)
    {
       m_contentList.removeAt(tagIndex);
    }
+   checkAmbiguousTags();
 }
 
 QString VCard::getTag(const QString& completeTag)
@@ -213,4 +228,30 @@ QString VCard::getTagInfo(const QString& tag)
     QFile resourceFile(resourceName);
     resourceFile.open(QIODevice::ReadOnly);
     return resourceFile.readAll();
+}
+
+void VCard::checkAmbiguousTags()
+{
+    m_ambiguousTagIndexSet.clear();
+
+    //TEL Tag
+    QMultiHash<QString, int> telTagHash;
+    for(int index = 0; index < getTagCount(); ++index)
+    {
+        QString tag = getTag(index);
+        if (tag.compare("TEL", Qt::CaseInsensitive) != 0)
+        {
+            continue;
+        }
+        QString properties = getTagProperties(index).join(";");
+        telTagHash.insert(properties, index);
+    }
+    foreach(QString properties, telTagHash.uniqueKeys())
+    {
+        QSet<int> indexSet = telTagHash.values(properties).toSet();
+        if (indexSet.size() > 1)
+        {
+            m_ambiguousTagIndexSet += indexSet;
+        }
+    }
 }
