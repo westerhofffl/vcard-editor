@@ -3,6 +3,7 @@
 #include "ui_MainWindow.h"
 #include "VCardProject.h"
 #include <QFileDialog>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -14,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionOpen_project, SIGNAL(triggered()), SLOT(openProject()));
     connect(ui->actionSave_project, SIGNAL(triggered()), SLOT(saveProject()));
     connect(ui->actionSave_project_as, SIGNAL(triggered()), SLOT(saveProjectAs()));
+    connect(ui->actionClose_project, SIGNAL(triggered()), SLOT(closeProject()));
 
     connect(ui->actionUndo, SIGNAL(triggered()), SLOT(undo()));
     connect(ui->actionRedo, SIGNAL(triggered()), SLOT(redo()));
@@ -98,6 +100,28 @@ void MainWindow::saveProjectAs()
        ui->tabWidget->setTabText(currentTabIndex, tabName);
    }
 }
+
+void MainWindow::closeProject()
+{
+    QWidget* currentWidget = ui->tabWidget->currentWidget();
+    ProjectWidget* currentProjectWidget = dynamic_cast<ProjectWidget*>(currentWidget);
+    if (currentProjectWidget == 0)
+    {
+        return;
+    }
+    if (currentProjectWidget->isProjectModified())
+    {
+        if (QMessageBox::warning(this, "Warning",
+            QString("The project has been changed. Save?"),
+            QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
+        {
+            saveProject();
+        }
+    }
+    delete currentProjectWidget;
+    updateProjectState();
+}
+
 void MainWindow::undo()
 {
     QWidget* currentWidget = ui->tabWidget->currentWidget();
@@ -126,6 +150,8 @@ void MainWindow::updateProjectState()
     ProjectWidget* currentProjectWidget = dynamic_cast<ProjectWidget*>(currentWidget);
     if (currentProjectWidget == 0)
     {
+        ui->actionUndo->setEnabled(false);
+        ui->actionRedo->setEnabled(false);
         return;
     }
 
