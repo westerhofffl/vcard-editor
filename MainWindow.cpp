@@ -15,6 +15,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSave_project, SIGNAL(triggered()), SLOT(saveProject()));
     connect(ui->actionSave_project_as, SIGNAL(triggered()), SLOT(saveProjectAs()));
 
+    connect(ui->actionUndo, SIGNAL(triggered()), SLOT(undo()));
+    connect(ui->actionRedo, SIGNAL(triggered()), SLOT(redo()));
+
     QString fileName =
           //"/home/gogi/Downloads/pcsc_pcsc_00001.vcf";
           "G:\\pcsc_pcsc_00001.vcf";
@@ -59,7 +62,15 @@ void MainWindow::saveProject()
     }
     const VCardProject& project = currentProjectWidget->getProject();
     QFile file(project.getFileName());
-    project.saveTo(file);
+    currentProjectWidget->saveProject(file);
+
+    int currentTabIndex = ui->tabWidget->currentIndex();
+    QString tabName = project.getFileName();
+    if (currentProjectWidget->isProjectModified())
+    {
+        tabName.append(" *");
+    }
+    ui->tabWidget->setTabText(currentTabIndex, tabName);
 }
 
 void MainWindow::saveProjectAs()
@@ -74,16 +85,69 @@ void MainWindow::saveProjectAs()
           QFileDialog::getSaveFileName(this, "Choose the target location", "", "*.vcf");
     if (!fileName.isEmpty())
     {
-       const VCardProject& project = currentProjectWidget->getProject();
        QFile file(fileName);
-       project.saveTo(file);
+       currentProjectWidget->saveProject(file);
+       const VCardProject& project = currentProjectWidget->getProject();
+
+       int currentTabIndex = ui->tabWidget->currentIndex();
+       QString tabName = project.getFileName();
+       if (currentProjectWidget->isProjectModified())
+       {
+           tabName.append(" *");
+       }
+       ui->tabWidget->setTabText(currentTabIndex, tabName);
+   }
+}
+void MainWindow::undo()
+{
+    QWidget* currentWidget = ui->tabWidget->currentWidget();
+    ProjectWidget* currentProjectWidget = dynamic_cast<ProjectWidget*>(currentWidget);
+    if (currentProjectWidget == 0)
+    {
+        return;
     }
+    currentProjectWidget->undo();
+}
+
+void MainWindow::redo()
+{
+    QWidget* currentWidget = ui->tabWidget->currentWidget();
+    ProjectWidget* currentProjectWidget = dynamic_cast<ProjectWidget*>(currentWidget);
+    if (currentProjectWidget == 0)
+    {
+        return;
+    }
+    currentProjectWidget->redo();
+}
+
+void MainWindow::updateProjectState()
+{
+    QWidget* currentWidget = ui->tabWidget->currentWidget();
+    ProjectWidget* currentProjectWidget = dynamic_cast<ProjectWidget*>(currentWidget);
+    if (currentProjectWidget == 0)
+    {
+        return;
+    }
+
+    ui->actionUndo->setEnabled(currentProjectWidget->canUndo());
+    ui->actionRedo->setEnabled(currentProjectWidget->canRedo());
+
+    const VCardProject& project = currentProjectWidget->getProject();
+    int currentTabIndex = ui->tabWidget->currentIndex();
+    QString tabName = project.getFileName();
+    if (currentProjectWidget->isProjectModified())
+    {
+        tabName.append(" *");
+    }
+    ui->tabWidget->setTabText(currentTabIndex, tabName);
 }
 
 void MainWindow::showProject(VCardProject* project)
 {
    ProjectWidget* projectWidget = new ProjectWidget(project, this);
    ui->tabWidget->addTab(projectWidget, project->getFileName());
+
+   connect(projectWidget, SIGNAL(projectChanged()), SLOT(updateProjectState()));
 }
 
 void MainWindow::changeEvent(QEvent *e)
