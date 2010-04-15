@@ -15,13 +15,16 @@ ProjectWidget::ProjectWidget(VCardProject* project, QWidget *parent) :
     QWidget(parent),
     m_ui(new Ui::ProjectWidget),
     m_project(project),
-    m_model(0)
+    m_model(0),
+    m_undoProject(0),
+    m_redoProject(0),
+    m_isProjectModified(false)
 {
     m_ui->setupUi(this);
 
     m_ui->duplicatesTreeView->hide();
 
-   m_ui->treeView->setItemDelegate(new ProjectWidgetItemDelegate(m_ui->treeView));
+    m_ui->treeView->setItemDelegate(new ProjectWidgetItemDelegate(m_ui->treeView));
 
     updateProjectView();
     updateButtons();
@@ -116,6 +119,59 @@ const VCardProject& ProjectWidget::getProject() const
    return *m_project;
 }
 
+bool ProjectWidget::saveProject(QFile& file)
+{
+    if (m_project->saveTo(file))
+    {
+        m_isProjectModified = false;
+        emit projectChanged();
+        return true;
+    }
+    return false;
+}
+
+bool ProjectWidget::isProjectModified() const
+{
+    return m_isProjectModified;
+}
+bool ProjectWidget::canUndo() const
+{
+    return (m_undoProject != 0);
+}
+bool ProjectWidget::canRedo() const
+{
+    return (m_redoProject != 0);
+}
+
+void ProjectWidget::undo()
+{
+    if (m_undoProject != 0)
+    {
+        m_redoProject = m_project;
+        m_project = m_undoProject;
+        m_undoProject = 0;
+
+        updateProjectView();
+        m_isProjectModified  = true;
+        emit projectChanged();
+    }
+}
+
+void ProjectWidget::redo()
+{
+    if (m_redoProject != 0)
+    {
+        m_undoProject = m_project;
+        m_project = m_redoProject;
+        m_redoProject = 0;
+        updateProjectView();
+
+        updateProjectView();
+        m_isProjectModified  = true;
+        emit projectChanged();
+    }
+}
+
 void ProjectWidget::changeEvent(QEvent *e)
 {
     QWidget::changeEvent(e);
@@ -162,6 +218,7 @@ void ProjectWidget::on_addVCardButton_clicked()
         vCard.updateTag(-1, "FN", fullName);
         QString name = dialog.getName();
         vCard.updateTag(-1, "N", name);
+        createUndoProject();
         m_project->addVCard(vCard);
         updateProjectView();
     }
@@ -171,12 +228,16 @@ void ProjectWidget::on_addVCardButton_clicked()
         on_showDuplicatesButton_clicked();
     }
     updateButtons();
+
+    m_isProjectModified  = true;
+    emit projectChanged();
 }
 
 void ProjectWidget::on_removeVCardButton_clicked()
 {
     QModelIndex currentIndex = m_ui->treeView->currentIndex();
     int vCardId = getVCardId(currentIndex);
+    createUndoProject();
     m_project->removeVCard(vCardId);
     updateProjectView();
 
@@ -185,6 +246,9 @@ void ProjectWidget::on_removeVCardButton_clicked()
         on_showDuplicatesButton_clicked();
     }
     updateButtons();
+
+    m_isProjectModified  = true;
+    emit projectChanged();
 }
 
 void ProjectWidget::on_insertTagButton_clicked()
@@ -212,6 +276,7 @@ void ProjectWidget::on_insertTagButton_clicked()
         QString completeTag = QString("%1;%2").arg(name).arg(properties);
         QString content = dialog.getContent();
         vCard.updateTag(tagIndex, completeTag, content);
+        createUndoProject();
         m_project->updateVCard(vCardId, vCard);
         updateProjectView();
     }
@@ -221,6 +286,9 @@ void ProjectWidget::on_insertTagButton_clicked()
         on_showDuplicatesButton_clicked();
     }
     updateButtons();
+
+    m_isProjectModified  = true;
+    emit projectChanged();
 }
 
 void ProjectWidget::on_removeTagButton_clicked()
@@ -240,6 +308,7 @@ void ProjectWidget::on_removeTagButton_clicked()
         return;
     }
     vCard.removeTag(tagIndex);
+    createUndoProject();
     m_project->updateVCard(vCardId, vCard);
     updateProjectView();
 
@@ -248,6 +317,9 @@ void ProjectWidget::on_removeTagButton_clicked()
         on_showDuplicatesButton_clicked();
     }
     updateButtons();
+
+    m_isProjectModified  = true;
+    emit projectChanged();
 }
 
 void ProjectWidget::updateTagData()
@@ -275,6 +347,7 @@ void ProjectWidget::updateTagData()
                 currentIndex.sibling(currentIndex.row(), CONTENT_COLUMN);
         QString content = contentModelIndex.data().toString();
         vCard.updateTag(tagIndex, completeTag, content);
+        createUndoProject();
         m_project->updateVCard(vCardId, vCard);
     }
 
@@ -285,6 +358,9 @@ void ProjectWidget::updateTagData()
         on_showDuplicatesButton_clicked();
     }
     updateButtons();
+
+    m_isProjectModified  = true;
+    emit projectChanged();
 }
 
 void ProjectWidget::updateButtons()
@@ -387,6 +463,14 @@ int ProjectWidget::getTagIndex(const QModelIndex& index) const\
     int tagIndex = currentIndex.data(Qt::UserRole).toInt();
     return tagIndex;
 
+}
+
+void ProjectWidget::createUndoProject()
+{
+    delete m_redoProject;
+    m_redoProject = 0;
+    delete m_undoProject;
+    m_undoProject = new VCardProject(*m_project);
 }
 
 void ProjectWidget::on_showDuplicatesButton_clicked()

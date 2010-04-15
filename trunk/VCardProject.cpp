@@ -25,13 +25,28 @@ VCardProject::VCardProject(QFile& file)
    }
 }
 
-void VCardProject::saveTo(QFile& file) const
+VCardProject::VCardProject(const VCardProject& other)
+{
+    *this = other;
+}
+
+bool VCardProject::saveTo(QFile& file)
 {
     if (file.open(QIODevice::WriteOnly))
     {
         QStringList vCardStringList(m_vCardContentMap.values());
         file.write(vCardStringList.join("\n").toUtf8());
+        m_absoluteFilePath = file.fileName();
+        return true;
     }
+    return false;
+}
+
+VCardProject& VCardProject::operator=(const VCardProject& other)
+{
+    m_absoluteFilePath = other.m_absoluteFilePath;
+    m_vCardContentMap = other.m_vCardContentMap;
+    return *this;
 }
 
 QString VCardProject::getAbsoluteFilePath() const

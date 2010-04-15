@@ -5,6 +5,8 @@ namespace Ui {
     class ProjectWidget;
 }
 
+class QFile;
+
 class ProjectWidgetSortModel;
 class VCardProject;
 class VCard;
@@ -22,6 +24,11 @@ public:
    ~ProjectWidget();
 
    const VCardProject& getProject() const;
+   bool saveProject(QFile& file);
+
+   bool isProjectModified() const;
+   bool canUndo() const;
+   bool canRedo() const;
 
    void updateProjectView();
 
@@ -39,6 +46,13 @@ public:
        DUP_COUNT_COLUMN,
        DUP_COLUMN_COUNT
    };
+
+public slots:
+   void undo();
+   void redo();
+
+signals:
+   void projectChanged();
 
 protected:
    void changeEvent(QEvent *e);
@@ -60,10 +74,17 @@ private slots:
 private:
     int getVCardId(const QModelIndex& index) const;
     int getTagIndex(const QModelIndex& index) const;
+    void createUndoProject();
 
 private:
    Ui::ProjectWidget* m_ui;
+
    VCardProject* m_project;
+
+   bool m_isProjectModified;
+
+   VCardProject* m_undoProject;
+   VCardProject* m_redoProject;
 
    ProjectWidgetSortModel* m_model;
 
