@@ -26,6 +26,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionImport, SIGNAL(triggered()), SLOT(importProject()));
     connect(ui->actionExport, SIGNAL(triggered()), SLOT(exportProject()));
 
+    connect(ui->actionAbout, SIGNAL(triggered()), SLOT(showAbout()));
+    connect(ui->actionAbout_Qt, SIGNAL(triggered()), SLOT(showAboutQt()));
+
     QString fileName =
           //"/home/gogi/Downloads/pcsc_pcsc_00001.vcf";
           "G:\\pcsc_pcsc_00001.vcf";
@@ -229,6 +232,16 @@ void MainWindow::exportProject()
     }
 }
 
+void MainWindow::showAbout()
+{
+    QMessageBox::about(this, "VCardEditor", "Created by G.Kolodenny");
+}
+
+void MainWindow::showAboutQt()
+{
+    QMessageBox::aboutQt(this, "VCardEditor");
+}
+
 void MainWindow::updateProjectState()
 {
     QWidget* currentWidget = ui->tabWidget->currentWidget();
@@ -239,9 +252,15 @@ void MainWindow::updateProjectState()
         ui->actionRedo->setEnabled(false);
         ui->actionImport->setEnabled(false);
         ui->actionExport->setEnabled(false);
+        ui->actionSave_project->setEnabled(false);
+        ui->actionSave_project_as->setEnabled(false);
+        ui->actionClose_project->setEnabled(false);
         return;
     }
 
+    ui->actionSave_project->setEnabled(true);
+    ui->actionSave_project_as->setEnabled(true);
+    ui->actionClose_project->setEnabled(true);
     ui->actionUndo->setEnabled(currentProjectWidget->canUndo());
     ui->actionRedo->setEnabled(currentProjectWidget->canRedo());
     ui->actionImport->setEnabled(true);

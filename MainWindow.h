@@ -31,6 +31,9 @@ private slots:
     void importProject();
     void exportProject();
 
+    void showAbout();
+    void showAboutQt();
+
     void updateProjectState();
 
 //    void importVCards();
