@@ -35,9 +35,9 @@ public:
 
    enum DuplicateColumns
    {
-       TEXT_COLUMN,
-       COUNT_COLUMN,
-       COLUMN_COUNT
+       DUP_TEXT_COLUMN,
+       DUP_COUNT_COLUMN,
+       DUP_COLUMN_COUNT
    };
 
 protected:
