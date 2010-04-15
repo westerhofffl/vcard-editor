@@ -50,6 +50,10 @@ void ProjectWidget::updateProjectView()
 
         QStandardItem* summaryTagItem = new QStandardItem(vCard.getSummary());
         summaryTagItem->setData(id, Qt::UserRole);
+        if (vCard.containsAmbiguousTags())
+        {
+            summaryTagItem->setForeground(Qt::blue);
+        }
         summaryTagItem->setFlags(summaryTagItem->flags() & ~Qt::ItemIsEditable);
         summaryTagItem->setRowCount(vCard.getTagCount());
         summaryTagItem->setColumnCount(COLUMN_COUNT);
@@ -78,6 +82,10 @@ void ProjectWidget::updateProjectView()
             if (!VCard::isContentEditable(tag))
             {
                 propertyItem->setForeground(Qt::gray);
+            }
+            if (vCard.isTagAmbiguous(tagIndex))
+            {
+                propertyItem->setForeground(Qt::blue);
             }
             summaryTagItem->setChild(tagIndex, PROPERTIES_COLUMN, propertyItem);
 
