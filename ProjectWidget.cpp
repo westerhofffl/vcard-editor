@@ -127,6 +127,16 @@ const VCardProject& ProjectWidget::getProject() const
    return *m_project;
 }
 
+void ProjectWidget::setProject(const VCardProject& project,
+    bool isSaved)
+{
+    createUndoProject();
+    *m_project = project;
+    updateProjectView();
+    m_isProjectModified = !isSaved;
+    emit projectChanged();
+}
+
 bool ProjectWidget::saveProject(QFile& file)
 {
     if (m_project->saveTo(file))
