@@ -34,7 +34,8 @@ void ProjectWidget::updateProjectView()
     m_model = new ProjectWidgetSortModel(m_ui->treeView);
 
     QList<int> idList = m_project->getVCardIdList();
-    QStandardItemModel* dataModel = new QStandardItemModel(idList.length(), COLUMN_COUNT, m_model);
+    QStandardItemModel* dataModel =
+            new QStandardItemModel(idList.length(), COLUMN_COUNT, m_model);
     dataModel->setHeaderData(TAG_COLUMN, Qt::Horizontal, "Tag");
     dataModel->setHeaderData(PROPERTIES_COLUMN, Qt::Horizontal, "Properties");
     dataModel->setHeaderData(CONTENT_COLUMN, Qt::Horizontal, "Content");
@@ -69,7 +70,8 @@ void ProjectWidget::updateProjectView()
             }
             summaryTagItem->setChild(tagIndex, TAG_COLUMN, tagItem);
 
-            QStandardItem* propertyItem = new QStandardItem(vCard.getTagProperties(tagIndex).join(";"));
+            QStandardItem* propertyItem =
+                    new QStandardItem(vCard.getTagProperties(tagIndex).join(";"));
             if (!VCard::isContentEditable(tag))
             {
                 propertyItem->setForeground(Qt::gray);
@@ -197,7 +199,8 @@ void ProjectWidget::on_insertTagButton_clicked()
         (tag.compare("N", Qt::CaseInsensitive) == 0) ||
         (tag.compare("FN", Qt::CaseInsensitive) == 0))
     {
-        QMessageBox::warning(this, "Warning", QString("A new tag cannot be inserted at this position!").arg(tag));
+        QMessageBox::warning(this, "Warning",
+                             QString("A new tag cannot be inserted at this position!").arg(tag));
         return;
     }
     NewTagDialog dialog(this);
@@ -254,18 +257,23 @@ void ProjectWidget::updateTagData()
     VCard vCard = m_project->getVCard(vCardId);
     int tagIndex = getTagIndex(currentIndex);
     QString oldTag = vCard.getTag(tagIndex);
-    if ((oldTag.compare("BEGIN", Qt::CaseInsensitive) == 0) ||
-        (oldTag.compare("END", Qt::CaseInsensitive) == 0) ||
-        (oldTag.compare("VERSION", Qt::CaseInsensitive) == 0))
+    if (VCard::isTagEditable(oldTag))
     {
-        QMessageBox::warning(this, "Warning", QString("Tag '%1' cannot be changed!").arg(oldTag));
+        QMessageBox::warning(this, "Warning",
+                             QString("Tag '%1' cannot be changed!").arg(oldTag));
     }
     else
     {
-        QString tag = currentIndex.sibling(currentIndex.row(), TAG_COLUMN).data().toString();
-        QString properties = currentIndex.sibling(currentIndex.row(), PROPERTIES_COLUMN).data().toString();
+        QModelIndex tagModelIndex =
+                currentIndex.sibling(currentIndex.row(), TAG_COLUMN);
+        QString tag = tagModelIndex.data().toString();
+        QModelIndex propertiesModelIndex =
+                currentIndex.sibling(currentIndex.row(), PROPERTIES_COLUMN);
+        QString properties = propertiesModelIndex.data().toString();
         QString completeTag = QString("%1;%2").arg(tag).arg(properties);
-        QString content = currentIndex.sibling(currentIndex.row(), CONTENT_COLUMN).data().toString();
+        QModelIndex contentModelIndex =
+                currentIndex.sibling(currentIndex.row(), CONTENT_COLUMN);
+        QString content = contentModelIndex.data().toString();
         vCard.updateTag(tagIndex, completeTag, content);
         m_project->updateVCard(vCardId, vCard);
     }
@@ -383,7 +391,6 @@ int ProjectWidget::getTagIndex(const QModelIndex& index) const\
 
 void ProjectWidget::on_showDuplicatesButton_clicked()
 {
-    //QMultiHash<content, QPair<vCardId, tagIndex> >
     QMap<QString, int> duplicatesMap;
 
     QList<int> idList = m_project->getVCardIdList();
@@ -426,28 +433,33 @@ void ProjectWidget::on_showDuplicatesButton_clicked()
         }
     }
 
-    QStandardItemModel* duplicatesModel = new QStandardItemModel(duplicatesMap.size(), 2, m_ui->duplicatesTreeView);
-    duplicatesModel->setHorizontalHeaderItem(0, new QStandardItem("Text"));
-    duplicatesModel->setHorizontalHeaderItem(1, new QStandardItem("Count"));
+    QStandardItemModel* duplicatesModel = new QStandardItemModel(duplicatesMap.size(),
+            DUP_COLUMN_COUNT, m_ui->duplicatesTreeView);
+    duplicatesModel->setHorizontalHeaderItem(DUP_TEXT_COLUMN,
+                                             new QStandardItem("Text"));
+    duplicatesModel->setHorizontalHeaderItem(DUP_COUNT_COLUMN,
+                                             new QStandardItem("Count"));
     QList<QString> duplicatesList = duplicatesMap.keys();
     for(int row = 0; row < duplicatesList.length(); ++row)
     {
         QString content = duplicatesList[row];
         QStandardItem* contentItem = new QStandardItem(content.simplified());
         contentItem->setData(content, Qt::UserRole);
-        duplicatesModel->setItem(row, 0, contentItem);
-        QStandardItem* countItem = new QStandardItem(QString::number(duplicatesMap[content]));
-        duplicatesModel->setItem(row, 1, countItem);
+        duplicatesModel->setItem(row, DUP_TEXT_COLUMN, contentItem);
+        QStandardItem* countItem = new QStandardItem(
+                QString::number(duplicatesMap[content]));
+        duplicatesModel->setItem(row, DUP_COUNT_COLUMN, countItem);
     }
     QStandardItem* showAllItem = new QStandardItem("Show all entries");
     duplicatesModel->insertRow(0);
     duplicatesModel->setItem(0, showAllItem);
 
     m_ui->duplicatesTreeView->setModel(duplicatesModel);
-    m_ui->duplicatesTreeView->setCurrentIndex(duplicatesModel->index(0, 0));
+    m_ui->duplicatesTreeView->setCurrentIndex(
+            duplicatesModel->index(0, DUP_TEXT_COLUMN));
     for(int row = 0; row < duplicatesModel->rowCount(); ++row)
     {
-        QModelIndex index = duplicatesModel->index(row, 0);
+        QModelIndex index = duplicatesModel->index(row, DUP_TEXT_COLUMN);
         if (index.data(Qt::UserRole).toString() == oldSelectedContent)
         {
             m_ui->duplicatesTreeView->setCurrentIndex(index);
@@ -455,30 +467,32 @@ void ProjectWidget::on_showDuplicatesButton_clicked()
             break;
         }
     }
-    m_ui->duplicatesTreeView->header()->setResizeMode(0, QHeaderView::Stretch);
+    m_ui->duplicatesTreeView->header()->setResizeMode(
+            DUP_TEXT_COLUMN, QHeaderView::Stretch);
 
     m_ui->duplicatesTreeView->show();
     m_ui->duplicatesButtonStackedWidget->setCurrentWidget(m_ui->hideDuplicatesPage);
 
     showSelectedDuplicates();
 
-    connect(m_ui->duplicatesTreeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
+    connect(m_ui->duplicatesTreeView->selectionModel(),
+            SIGNAL(currentChanged(QModelIndex,QModelIndex)),
             SLOT(showSelectedDuplicates()));
 }
 
 void ProjectWidget::on_hideDuplicatesButton_clicked()
 {
-    QStandardItemModel* duplicatesModel = new QStandardItemModel(1, 2, m_ui->duplicatesTreeView);
+    QStandardItemModel* duplicatesModel =
+            new QStandardItemModel(1, DUP_COLUMN_COUNT, m_ui->duplicatesTreeView);
     QStandardItem* showAllItem = new QStandardItem("Show all entries");
     duplicatesModel->setItem(0, showAllItem);
 
     m_ui->duplicatesTreeView->setModel(duplicatesModel);
-    m_ui->duplicatesTreeView->setCurrentIndex(duplicatesModel->index(0, 0));
+    m_ui->duplicatesTreeView->setCurrentIndex(
+            duplicatesModel->index(0, DUP_TEXT_COLUMN));
 
     m_ui->duplicatesTreeView->hide();
     m_ui->duplicatesButtonStackedWidget->setCurrentWidget(m_ui->showDuplicatesPage);
 
     showSelectedDuplicates();
 }
-
-
