@@ -28,6 +28,9 @@ private slots:
     void undo();
     void redo();
 
+    void importProject();
+    void exportProject();
+
     void updateProjectState();
 
 //    void importVCards();

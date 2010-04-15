@@ -24,6 +24,8 @@ public:
    ~ProjectWidget();
 
    const VCardProject& getProject() const;
+   void setProject(const VCardProject& project,
+                   bool isSaved);
    bool saveProject(QFile& file);
 
    bool isProjectModified() const;
