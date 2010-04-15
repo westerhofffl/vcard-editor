@@ -23,6 +23,7 @@ private slots:
     void openProject();
     void saveProject();
     void saveProjectAs();
+    void closeProject();
 
     void undo();
     void redo();

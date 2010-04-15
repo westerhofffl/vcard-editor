@@ -41,6 +41,7 @@
     <addaction name="actionOpen_project"/>
     <addaction name="actionSave_project"/>
     <addaction name="actionSave_project_as"/>
+    <addaction name="actionClose_project"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -130,6 +131,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Y</string>
+   </property>
+  </action>
+  <action name="actionClose_project">
+   <property name="text">
+    <string>Close project</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
    </property>
   </action>
  </widget>
