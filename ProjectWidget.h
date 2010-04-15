@@ -82,14 +82,12 @@ private:
    Ui::ProjectWidget* m_ui;
 
    VCardProject* m_project;
+   ProjectWidgetSortModel* m_model;
 
    bool m_isProjectModified;
 
    VCardProject* m_undoProject;
    VCardProject* m_redoProject;
-
-   ProjectWidgetSortModel* m_model;
-
 };
 
 #endif // PROJECTWIDGET_H
