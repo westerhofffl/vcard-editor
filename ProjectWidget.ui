@@ -31,9 +31,6 @@
        <attribute name="headerStretchLastSection">
         <bool>false</bool>
        </attribute>
-       <attribute name="headerStretchLastSection">
-        <bool>false</bool>
-       </attribute>
       </widget>
      </widget>
      <widget class="QGroupBox" name="groupBox_4">
@@ -69,14 +66,14 @@
         <item>
          <widget class="QPushButton" name="addVCardButton">
           <property name="text">
-           <string>Add</string>
+           <string>&amp;Add</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="removeVCardButton">
           <property name="text">
-           <string>Remove</string>
+           <string>&amp;Remove</string>
           </property>
          </widget>
         </item>
@@ -98,14 +95,14 @@
         <item>
          <widget class="QPushButton" name="insertTagButton">
           <property name="text">
-           <string>Insert</string>
+           <string>&amp;Insert</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="removeTagButton">
           <property name="text">
-           <string>Remove</string>
+           <string>&amp;Delete</string>
           </property>
          </widget>
         </item>
