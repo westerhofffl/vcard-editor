@@ -2,6 +2,9 @@
 
 #include "ProjectWidget.h"
 
+#include <QPainter>
+#include <QPaintDevice>
+#include <QPaintEngine>
 #include <QStyleOptionViewItemV4>
 
 ProjectWidgetItemDelegate::ProjectWidgetItemDelegate(QObject *parent) :
@@ -19,9 +22,17 @@ void ProjectWidgetItemDelegate::paint ( QPainter * painter,
         QModelIndex modifiedIndex = index.sibling(index.row(), ProjectWidget::TAG_COLUMN);
 
         QStyleOptionViewItemV4 modifiedOption(option);
-        modifiedOption.rect.setX(option.decorationSize.width());        
-        modifiedOption.rect.setWidth(option.fontMetrics.width(modifiedIndex.data().toString())
-                                     + option.decorationSize.width());
+        modifiedOption.rect.setX(option.decorationSize.width());
+        int width = option.fontMetrics.width(modifiedIndex.data().toString())
+                    + option.decorationSize.width();
+        QPaintEngine* paintEngine = painter->paintEngine();
+        if (paintEngine != 0)
+        {
+            QPaintDevice* paintDevice = paintEngine->paintDevice();
+            width = paintDevice->width();
+        }
+
+        modifiedOption.rect.setWidth(width);
         QItemDelegate::paint(painter, modifiedOption, modifiedIndex);
         return;
     }
