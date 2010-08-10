@@ -27,8 +27,13 @@ private slots:
    void showTablePreview(QTableWidgetItem* item);
    void checkTableItemState(QTableWidgetItem* item);
 
+   void move();
+   void unmove();
+   void toggleMove();
+
 private:
    void updateTable(int groupIndex, int fileIndex);
+   QList<int> getSelectedFileList() const;
 
 private:
     Ui::MainWindow *m_ui;

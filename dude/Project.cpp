@@ -124,6 +124,7 @@ void Project::setFileMoved(int index, bool isMoved)
       }
    }
    QFile::rename(sourceFilePath, targetFilePath);
+   emit groupUpdated(m_fileGroupList.at(index));
 }
 
 QPixmap Project::getFilePixmap(int index) const

@@ -25,6 +25,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(m_ui->tableWidget, SIGNAL(itemChanged(QTableWidgetItem*)),
             SLOT(checkTableItemState(QTableWidgetItem*)));
+
+    connect(m_ui->moveButton, SIGNAL(clicked()), SLOT(move()));
+    connect(m_ui->unmoveButton, SIGNAL(clicked()), SLOT(unmove()));
+    connect(m_ui->toggleMoveButton, SIGNAL(clicked()), SLOT(toggleMove()));
+
 }
 
 MainWindow::~MainWindow()
@@ -110,21 +115,34 @@ void MainWindow::updateGroup(int index)
    int firstFileIndex = fileIndexList.first();
    groupItem->setData(0, Qt::UserRole, firstFileIndex);
    groupItem->setData(0, Qt::UserRole + 1, index);
-   groupItem->setText(1, QString::number(fileIndexList.size()));
    groupItem->setText(2, QString::number(m_project->getFileSize(firstFileIndex)));
    QByteArray md4 = m_project->getFileMd4(firstFileIndex);
    groupItem->setText(3, m_project->getFileMd4(firstFileIndex).toHex());
 
    qDeleteAll(groupItem->takeChildren());
+   int movedCount = 0;
    foreach(int fileIndex, fileIndexList)
    {
       QTreeWidgetItem* fileItem = new QTreeWidgetItem(groupItem);
       QFileInfo fileInfo(m_project->getFileFolderName(fileIndex), m_project->getFileName(fileIndex));
       fileItem->setText(0, fileInfo.absoluteFilePath());
       fileItem->setData(0, Qt::UserRole, fileIndex);
+      if (m_project->isFileMoved(fileIndex))
+      {
+         ++movedCount;
+         fileItem->setText(1, "moved");
+      }
    }
+   groupItem->setText(1, QString("%1 (%2 left, %3 moved)")
+                      .arg(fileIndexList.size())
+                      .arg(fileIndexList.size() - movedCount)
+                      .arg(movedCount));
 
    groupItem->setHidden(fileIndexList.size() == 1);
+   if (groupItem->isSelected())
+   {
+      updateTable(index, -1);
+   }
 }
 
 void MainWindow::showTreePreview(QTreeWidgetItem* item)
@@ -249,4 +267,44 @@ void MainWindow::checkTableItemState(QTableWidgetItem* item)
       int fileIndex = item->data(Qt::UserRole).toInt();
       m_project->setFileMoved(fileIndex, item->checkState() == Qt::Checked);
    }
+}
+
+
+void MainWindow::move()
+{
+   QList<int> fileIndexList = getSelectedFileList();
+   foreach(int fileIndex, fileIndexList)
+   {
+      m_project->setFileMoved(fileIndex, true);
+   }
+}
+
+void MainWindow::unmove()
+{
+   QList<int> fileIndexList = getSelectedFileList();
+   foreach(int fileIndex, fileIndexList)
+   {
+      m_project->setFileMoved(fileIndex, false);
+   }
+}
+
+void MainWindow::toggleMove()
+{
+   QList<int> fileIndexList = getSelectedFileList();
+   foreach(int fileIndex, fileIndexList)
+   {
+      m_project->setFileMoved(fileIndex, !m_project->isFileMoved(fileIndex));
+   }
+}
+
+QList<int> MainWindow::getSelectedFileList() const
+{
+   QList<QTableWidgetItem*> itemList = m_ui->tableWidget->selectedItems();
+   QList<int> fileIndexList;
+   foreach(QTableWidgetItem* item, itemList)
+   {
+      int fileIndex = item->data(Qt::UserRole).toInt();
+      fileIndexList.append(fileIndex);
+   }
+   return fileIndexList;
 }
