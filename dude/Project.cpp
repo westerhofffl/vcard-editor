@@ -89,6 +89,14 @@ bool Project::isFileMoved(int index) const
 }
 void Project::setFileMoved(int index, bool isMoved)
 {
+   bool wasMoved = m_movedFileIndexSet.contains(index);
+   if (isMoved == wasMoved)
+   {
+      return;
+   }
+
+   QString sourceFilePath = getFullFileFolderName(index).append("/").append(getFileName(index));
+   QFileInfo sourceFileInfo(sourceFilePath);
    if (isMoved)
    {
       m_movedFileIndexSet.insert(index);
@@ -97,6 +105,25 @@ void Project::setFileMoved(int index, bool isMoved)
    {
       m_movedFileIndexSet.remove(index);
    }
+   QString targetFilePath = getFullFileFolderName(index).append("/").append(getFileName(index));
+   QFileInfo targetFileInfo(targetFilePath);
+   QDir targetDir = targetFileInfo.dir();
+   QStringList dirPathList = targetDir.absolutePath().split("/");
+   for(int pathStep = 1; pathStep <= dirPathList.length(); ++pathStep)
+   {
+      QString dirPath = QStringList(dirPathList.mid(0, pathStep)).join("/");
+      if (dirPath.isEmpty())
+      {
+         dirPath.append(QDir::rootPath());
+      }
+      QDir stepDir(dirPath);
+      if (!stepDir.exists())
+      {
+         stepDir.cdUp();
+         stepDir.mkdir(dirPathList[pathStep - 1]);
+      }
+   }
+   QFile::rename(sourceFilePath, targetFilePath);
 }
 
 QPixmap Project::getFilePixmap(int index) const

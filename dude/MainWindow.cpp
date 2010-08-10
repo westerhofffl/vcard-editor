@@ -22,6 +22,9 @@ MainWindow::MainWindow(QWidget *parent) :
             SLOT(showTreePreview(QTreeWidgetItem*)));
     connect(m_ui->tableWidget, SIGNAL(currentItemChanged(QTableWidgetItem*,QTableWidgetItem*)),
        SLOT(showTablePreview(QTableWidgetItem*)));
+
+    connect(m_ui->tableWidget, SIGNAL(itemChanged(QTableWidgetItem*)),
+            SLOT(checkTableItemState(QTableWidgetItem*)));
 }
 
 MainWindow::~MainWindow()
@@ -207,7 +210,7 @@ void MainWindow::updateTable(int groupIndex, int fileIndex)
             m_ui->tableWidget->setHorizontalHeaderLabels(columnList);
          }
          QTableWidgetItem* fileItem = new QTableWidgetItem(m_project->getFileName(fileIndex));
-         fileItem->setCheckState(Qt::Unchecked);
+         fileItem->setCheckState(m_project->isFileMoved(fileIndex) ? Qt::Checked : Qt::Unchecked);
          fileItem->setData(Qt::UserRole, fileIndex);
          m_ui->tableWidget->setItem(row, column, fileItem);
       }
@@ -236,5 +239,14 @@ void MainWindow::showTablePreview(QTableWidgetItem* item)
       QSize labelSize = m_ui->tablePreviewLabel->size();
       m_ui->tablePreviewLabel->setPixmap(
             m_project->getFilePixmap(fileIndex).scaled(labelSize, Qt::KeepAspectRatio));
+   }
+}
+
+void MainWindow::checkTableItemState(QTableWidgetItem* item)
+{
+   if (item)
+   {
+      int fileIndex = item->data(Qt::UserRole).toInt();
+      m_project->setFileMoved(fileIndex, item->checkState() == Qt::Checked);
    }
 }
