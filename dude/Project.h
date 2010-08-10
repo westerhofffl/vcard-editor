@@ -1,6 +1,7 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
+#include <QPixmap>
 #include <QSet>
 #include <QStringList>
 #include <QTimer>
@@ -12,7 +13,8 @@ class Project : public QObject
     Q_OBJECT
 
 public:
-    Project(const QString& folderName);
+    Project(const QString& folderName,
+            const QString& duplicatesFolderName);
 
     QString getFolderName() const;
 
@@ -31,9 +33,13 @@ public:
     int getFileCount() const;
     QString getFileName(int index) const;
     QString getFileFolderName(int index) const;
+    QString getFullFileFolderName(int index) const;
     int getFileSize(int index) const;
     QByteArray getFileMd4(int index) const;
     int getFileGroup(int index) const;
+    bool isFileMoved(int index) const;
+    void setFileMoved(int index, bool isMoved);
+    QPixmap getFilePixmap(int index) const;
 
     QList<int> getFolderFileList(const QList<int>& fileIndexList) const;
     QList<int> getFolderFileList(int fileIndex) const;
@@ -44,11 +50,6 @@ public:
     QList<int> getGroupList(const QList<int>& index) const;
 
 private slots:
-    void addFile(const QString& fileName,
-                 const QString& fileFolder,
-                 int fileSize,
-                 int fileCrc);
-
     void doScan();
 
 signals:
@@ -58,10 +59,12 @@ signals:
 
 
 private:
-   void addFolderFiles(const QString& folderName);
+   void addFolderFiles(const QString& folderName,
+                       bool isDuplicatesFolder);
 
 private:
     const QString m_folderName;
+    const QString m_duplicatesFolderName;
 
     Status m_status;
 
@@ -70,6 +73,7 @@ private:
     QList<int> m_fileSizeList;
     QList<QByteArray> m_fileMd4List;
     QList<int> m_fileGroupList;
+    QSet<int> m_movedFileIndexSet;
 
     QMultiHash<int, int> m_fileSizeIndexHash;
     QList<QByteArray> m_groupMd4List;

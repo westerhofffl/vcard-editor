@@ -16,10 +16,13 @@ public:
     ~ProjectSettingsDialog();
 
     QString getFolderName() const;
+    QString getDuplicatesFolderName() const;
     bool parseSubfolders() const;
 
 private slots:
    void chooseFolder();
+   void chooseDuplicatesFolder();
+   void setDefaultDuplicatesFolder();
 
 private:
     Ui::ProjectSettingsDialog *m_ui;

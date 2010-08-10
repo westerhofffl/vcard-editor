@@ -5,8 +5,9 @@
 #include <QDir>
 #include <QFileInfo>
 
-Project::Project(const QString &folderName) :
+Project::Project(const QString &folderName, const QString &duplicatesFolderName) :
       m_folderName(folderName),
+      m_duplicatesFolderName(duplicatesFolderName),
       m_status(NOT_STARTED)
 {
    m_timer.setInterval(1);
@@ -58,6 +59,16 @@ QString Project::getFileFolderName(int index) const
 {
    return m_fileFolderNameList.at(index);
 }
+QString Project::getFullFileFolderName(int index) const
+{
+   QString prefix = m_folderName;
+   if (isFileMoved(index))
+   {
+      prefix = m_duplicatesFolderName;
+   }
+   return prefix + getFileFolderName(index);
+}
+
 int Project::getFileSize(int index) const
 {
    return m_fileSizeList.at(index);
@@ -71,6 +82,31 @@ int Project::getFileGroup(int index) const
 {
    return m_fileGroupList.at(index);
 }
+
+bool Project::isFileMoved(int index) const
+{
+   return m_movedFileIndexSet.contains(index);
+}
+void Project::setFileMoved(int index, bool isMoved)
+{
+   if (isMoved)
+   {
+      m_movedFileIndexSet.insert(index);
+   }
+   else
+   {
+      m_movedFileIndexSet.remove(index);
+   }
+}
+
+QPixmap Project::getFilePixmap(int index) const
+{
+   QString folderName = getFullFileFolderName(index);
+   QFileInfo fileInfo(folderName, getFileName(index));
+   QImage image(fileInfo.absoluteFilePath());
+   return QPixmap::fromImage(image);
+}
+
 
 QList<int> Project::getFolderFileList(const QList<int>& fileIndexList) const
 {
@@ -119,20 +155,14 @@ QList<int> Project::getGroupList(const QList<int> &fileIndexList) const
    return groupIndexList;
 }
 
-
-void Project::addFile(const QString& fileName,  const QString& fileFolder,
-      int fileSize, int fileCrc)
-{
-
-}
-
 void Project::doScan()
 {
    if (m_status == NOT_STARTED)
    {
       qWarning("scan start");
       emit progressStatus(-1, "Starting...");
-      addFolderFiles(m_folderName);
+      addFolderFiles(m_folderName, false);
+      addFolderFiles(m_duplicatesFolderName, true);
       m_status = SCANNING;
    }
 
@@ -159,7 +189,7 @@ void Project::doScan()
    else
    {
       qWarning("%i ist ein duplikat", index);
-      QFileInfo fileInfo(getFileFolderName(index), getFileName(index));
+      QFileInfo fileInfo(getFullFileFolderName(index), getFileName(index));
       QFile file(fileInfo.absoluteFilePath());
       if (!file.open(QIODevice::ReadOnly))
       {
@@ -191,7 +221,7 @@ void Project::doScan()
    }
 }
 
-void Project::addFolderFiles(const QString& folderName)
+void Project::addFolderFiles(const QString& folderName, bool isDuplicatesFolder)
 {
    emit progressStatus(-1, QString("Scanning %1").arg(folderName));
 
@@ -216,16 +246,29 @@ void Project::addFolderFiles(const QString& folderName)
          qWarning("New file: %s", fileInfo.fileName().toAscii().data());
          int index = m_fileNameList.size();
          m_fileNameList.append(fileInfo.fileName());
-         m_fileFolderNameList.append(folderName);
+         QString shortFolderName = folderName;
+         if (isDuplicatesFolder)
+         {
+            shortFolderName.remove(0, m_duplicatesFolderName.length());
+         }
+         else
+         {
+            shortFolderName.remove(0, m_folderName.length());
+         }
+         m_fileFolderNameList.append(shortFolderName);
          m_fileSizeList.append(fileInfo.size());
          emit fileUpdated(m_fileNameList.size() - 1);
          m_fileSizeIndexHash.insertMulti(fileInfo.size(), index);
+         if (isDuplicatesFolder)
+         {
+            m_movedFileIndexSet.insert(index);
+         }
       }
       QCoreApplication::processEvents();
    }
    foreach(const QString& folderName, subfolderList)
    {
       qWarning("New folder: %s", folderName.toAscii().data());
-      addFolderFiles(folderName);
+      addFolderFiles(folderName, isDuplicatesFolder);
    }
 }

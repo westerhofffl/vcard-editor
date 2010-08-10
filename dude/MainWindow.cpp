@@ -35,7 +35,8 @@ void MainWindow::createNewProject()
    if (settingsDialog->exec() == QDialog::Accepted)
    {
       delete m_project;
-      m_project = new Project(settingsDialog->getFolderName());
+      m_project = new Project(settingsDialog->getFolderName(),
+                              settingsDialog->getDuplicatesFolderName());
       connect(m_project, SIGNAL(progressStatus(int, QString)),
               SLOT(setProgressBar(int, QString)));
       connect(m_project, SIGNAL(groupUpdated(int)),
@@ -126,10 +127,9 @@ void MainWindow::updateGroup(int index)
 void MainWindow::showTreePreview(QTreeWidgetItem* item)
 {
    int fileIndex = item->data(0, Qt::UserRole).toInt();
-   QFileInfo fileInfo(m_project->getFileFolderName(fileIndex), m_project->getFileName(fileIndex));
-   QImage image(fileInfo.absoluteFilePath());
    QSize labelSize = m_ui->treePreviewLabel->size();
-   m_ui->treePreviewLabel->setPixmap(QPixmap::fromImage(image).scaled(labelSize, Qt::KeepAspectRatio));
+   m_ui->treePreviewLabel->setPixmap(
+         m_project->getFilePixmap(fileIndex).scaled(labelSize, Qt::KeepAspectRatio));
 
    QVariant groupIndexVariant = item->data(0, Qt::UserRole + 1);
    if (!groupIndexVariant.isValid())
@@ -218,6 +218,9 @@ void MainWindow::updateTable(int groupIndex, int fileIndex)
    }
    m_ui->tableWidget->setRowCount(row);
    m_ui->tableWidget->setColumnCount(columnList.size());
+   QHeaderView* horizontalHeader =  m_ui->tableWidget->horizontalHeader();
+   horizontalHeader->setResizeMode(QHeaderView::ResizeToContents);
+
    QApplication::restoreOverrideCursor();
 }
 
@@ -230,9 +233,8 @@ void MainWindow::showTablePreview(QTableWidgetItem* item)
    else
    {
       int fileIndex = item->data(Qt::UserRole).toInt();
-      QFileInfo fileInfo(m_project->getFileFolderName(fileIndex), m_project->getFileName(fileIndex));
-      QImage image(fileInfo.absoluteFilePath());
       QSize labelSize = m_ui->tablePreviewLabel->size();
-      m_ui->tablePreviewLabel->setPixmap(QPixmap::fromImage(image).scaled(labelSize, Qt::KeepAspectRatio));
+      m_ui->tablePreviewLabel->setPixmap(
+            m_project->getFilePixmap(fileIndex).scaled(labelSize, Qt::KeepAspectRatio));
    }
 }
