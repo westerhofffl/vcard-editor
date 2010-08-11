@@ -132,9 +132,9 @@
        </property>
        <layout class="QGridLayout" name="gridLayout_3">
         <item row="0" column="0">
-         <widget class="QComboBox" name="comboBox">
+         <widget class="QComboBox" name="filterComboBox">
           <property name="enabled">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <property name="currentIndex">
            <number>1</number>
@@ -205,8 +205,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>201</width>
-              <height>135</height>
+              <width>220</width>
+              <height>153</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout">
@@ -260,8 +260,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>201</width>
-              <height>135</height>
+              <width>220</width>
+              <height>153</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_2">
@@ -283,14 +283,14 @@
         <item row="1" column="0">
          <widget class="QPushButton" name="moveButton">
           <property name="text">
-           <string>Set moved</string>
+           <string>Move</string>
           </property>
          </widget>
         </item>
         <item row="1" column="1">
          <widget class="QPushButton" name="unmoveButton">
           <property name="text">
-           <string>Set not moved</string>
+           <string>Un-move</string>
           </property>
          </widget>
         </item>
@@ -326,7 +326,7 @@
      <x>0</x>
      <y>0</y>
      <width>1065</width>
-     <height>25</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuProject">

@@ -18,6 +18,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_ui->actionNew, SIGNAL(triggered()), SLOT(createNewProject()));
     connect(m_ui->pauseButton, SIGNAL(clicked()), SLOT(startStopProject()));
 
+    connect(m_ui->filterComboBox, SIGNAL(currentIndexChanged(int)),
+       SLOT(updateFilter()));
+
     connect(m_ui->treeWidget, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)),
             SLOT(showTreePreview(QTreeWidgetItem*)));
     connect(m_ui->tableWidget, SIGNAL(currentItemChanged(QTableWidgetItem*,QTableWidgetItem*)),
@@ -113,8 +116,9 @@ void MainWindow::updateGroup(int index)
    qSort(fileNameList);
    groupItem->setText(0, fileNameList.join(","));
    int firstFileIndex = fileIndexList.first();
-   groupItem->setData(0, Qt::UserRole, firstFileIndex);
-   groupItem->setData(0, Qt::UserRole + 1, index);
+   groupItem->setData(0, TREE_ROLE_FILE_INDEX, firstFileIndex);
+   groupItem->setData(0, TREE_ROLE_GROUP_INDEX, index);
+   groupItem->setData(0, TREE_ROLE_FILE_COUNT, fileIndexList.size());
    groupItem->setText(2, QString::number(m_project->getFileSize(firstFileIndex)));
    QByteArray md4 = m_project->getFileMd4(firstFileIndex);
    groupItem->setText(3, m_project->getFileMd4(firstFileIndex).toHex());
@@ -126,7 +130,7 @@ void MainWindow::updateGroup(int index)
       QTreeWidgetItem* fileItem = new QTreeWidgetItem(groupItem);
       QFileInfo fileInfo(m_project->getFileFolderName(fileIndex), m_project->getFileName(fileIndex));
       fileItem->setText(0, fileInfo.absoluteFilePath());
-      fileItem->setData(0, Qt::UserRole, fileIndex);
+      fileItem->setData(0, TREE_ROLE_FILE_INDEX, fileIndex);
       if (m_project->isFileMoved(fileIndex))
       {
          ++movedCount;
@@ -137,25 +141,55 @@ void MainWindow::updateGroup(int index)
                       .arg(fileIndexList.size())
                       .arg(fileIndexList.size() - movedCount)
                       .arg(movedCount));
+   groupItem->setData(0, TREE_ROLE_MOVED_COUNT, movedCount);
 
-   groupItem->setHidden(fileIndexList.size() == 1);
    if (groupItem->isSelected())
    {
       updateTable(index, -1);
    }
+   updateFilter(groupItem);
 }
 
+
+void MainWindow::updateFilter()
+{
+   for (int row = 0; row < m_ui->treeWidget->topLevelItemCount(); ++row)
+   {
+      QTreeWidgetItem* item = m_ui->treeWidget->topLevelItem(row);
+      updateFilter(item);
+   }
+}
+
+void MainWindow::updateFilter(QTreeWidgetItem* item)
+{
+   int fileCount = item->data(0, TREE_ROLE_FILE_COUNT).toInt();
+   int movedCount = item->data(0, TREE_ROLE_MOVED_COUNT).toInt();
+   switch(m_ui->filterComboBox->currentIndex())
+   {
+   case 0:
+      item->setHidden(false);
+      break;
+   case 1:
+      item->setHidden(fileCount <= 1);
+      break;
+   case 2:
+      item->setHidden((fileCount <= 1) || ((fileCount - movedCount) <= 1));
+      break;
+   default:
+      break;
+   };      
+}
 void MainWindow::showTreePreview(QTreeWidgetItem* item)
 {
-   int fileIndex = item->data(0, Qt::UserRole).toInt();
+   int fileIndex = item->data(0, TREE_ROLE_FILE_INDEX).toInt();
    QSize labelSize = m_ui->treePreviewLabel->size();
    m_ui->treePreviewLabel->setPixmap(
          m_project->getFilePixmap(fileIndex).scaled(labelSize, Qt::KeepAspectRatio));
 
-   QVariant groupIndexVariant = item->data(0, Qt::UserRole + 1);
+   QVariant groupIndexVariant = item->data(0, TREE_ROLE_GROUP_INDEX);
    if (!groupIndexVariant.isValid())
    {
-      groupIndexVariant = item->parent()->data(0, Qt::UserRole + 1);
+      groupIndexVariant = item->parent()->data(0, TREE_ROLE_GROUP_INDEX);
    }
    else
    {

@@ -23,6 +23,9 @@ private slots:
    void setProgressBar(int progress, QString text);
    void updateGroup(int index);
 
+   void updateFilter();
+   void updateFilter(QTreeWidgetItem* item);
+
    void showTreePreview(QTreeWidgetItem* item);
    void showTablePreview(QTableWidgetItem* item);
    void checkTableItemState(QTableWidgetItem* item);
@@ -34,6 +37,14 @@ private slots:
 private:
    void updateTable(int groupIndex, int fileIndex);
    QList<int> getSelectedFileList() const;
+
+   enum
+   {
+      TREE_ROLE_FILE_INDEX = Qt::UserRole,
+      TREE_ROLE_GROUP_INDEX,
+      TREE_ROLE_FILE_COUNT,
+      TREE_ROLE_MOVED_COUNT
+   };
 
 private:
     Ui::MainWindow *m_ui;
