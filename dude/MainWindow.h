@@ -27,6 +27,7 @@ private slots:
    void updateFilter(QTreeWidgetItem* item);
 
    void showTreePreview(QTreeWidgetItem* item);
+   void showExternTreePreview();
    void showTablePreview(QTableWidgetItem* item);
    void checkTableItemState(QTableWidgetItem* item);
 

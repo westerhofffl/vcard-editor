@@ -127,14 +127,18 @@ void Project::setFileMoved(int index, bool isMoved)
    emit groupUpdated(m_fileGroupList.at(index));
 }
 
-QPixmap Project::getFilePixmap(int index) const
+QString Project::getAbsoluteFilePath(int index) const
 {
    QString folderName = getFullFileFolderName(index);
    QFileInfo fileInfo(folderName, getFileName(index));
-   QImage image(fileInfo.absoluteFilePath());
-   return QPixmap::fromImage(image);
+   return fileInfo.absoluteFilePath();
 }
 
+QPixmap Project::getFilePixmap(int index) const
+{
+   QImage image(getAbsoluteFilePath(index));
+   return QPixmap::fromImage(image);
+}
 
 QList<int> Project::getFolderFileList(const QList<int>& fileIndexList) const
 {

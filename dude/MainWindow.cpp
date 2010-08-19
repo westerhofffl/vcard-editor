@@ -3,10 +3,12 @@
 #include "Project.h"
 #include "ProjectSettingsDialog.h"
 
+#include <QDesktopServices>
 #include <QDir>
 #include <QFileInfo>
 #include <QPixmap>
 #include <QImage>
+#include <QUrl>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -23,6 +25,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(m_ui->treeWidget, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)),
             SLOT(showTreePreview(QTreeWidgetItem*)));
+
+    connect(m_ui->treePreviewButton, SIGNAL(clicked()), SLOT(showExternTreePreview()));
+
     connect(m_ui->tableWidget, SIGNAL(currentItemChanged(QTableWidgetItem*,QTableWidgetItem*)),
        SLOT(showTablePreview(QTableWidgetItem*)));
 
@@ -182,9 +187,38 @@ void MainWindow::updateFilter(QTreeWidgetItem* item)
 void MainWindow::showTreePreview(QTreeWidgetItem* item)
 {
    int fileIndex = item->data(0, TREE_ROLE_FILE_INDEX).toInt();
-   QSize labelSize = m_ui->treePreviewLabel->size();
-   m_ui->treePreviewLabel->setPixmap(
-         m_project->getFilePixmap(fileIndex).scaled(labelSize, Qt::KeepAspectRatio));
+   if (m_project->getFilePixmap(fileIndex).isNull())
+   {
+      m_ui->treePreviewButton->setText("<no preview>");
+   }
+   else
+   {
+      m_ui->treePreviewButton->setText("");
+   }
+   QString styleSheetString;
+   styleSheetString.append(QString("QPushButton {"));
+   QString absoluteFilePath = m_project->getAbsoluteFilePath(fileIndex);
+   styleSheetString.append(QString("image: url(%1);").arg(absoluteFilePath));
+   styleSheetString.append(QString("border: 2px solid #8f8f91;"));
+   styleSheetString.append(QString("border-radius: 6px;"));
+   styleSheetString.append(QString("background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"));
+   styleSheetString.append(QString("stop: 0 #f6f7fa, stop: 1 #dadbde);"));
+   styleSheetString.append(QString("padding: 5px ;"));
+   styleSheetString.append(QString("}"));
+
+   styleSheetString.append(QString("QPushButton:pressed {"));
+   styleSheetString.append(QString("   background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"));
+   styleSheetString.append(QString("stop: 0 #dadbde, stop: 1 #f6f7fa);"));
+   styleSheetString.append(QString("            }"));
+
+   styleSheetString.append(QString("QPushButton:flat {"));
+   styleSheetString.append(QString("border: none; /* no border for a flat push button */"));
+   styleSheetString.append(QString("            }"));
+
+   styleSheetString.append(QString("QPushButton:default {"));
+   styleSheetString.append(QString("            border-color: navy; /* make the default button prominent */"));
+   styleSheetString.append(QString("            }"));
+   m_ui->treePreviewButton->setStyleSheet(styleSheetString);
 
    QVariant groupIndexVariant = item->data(0, TREE_ROLE_GROUP_INDEX);
    if (!groupIndexVariant.isValid())
@@ -199,6 +233,18 @@ void MainWindow::showTreePreview(QTreeWidgetItem* item)
    int groupIndex = groupIndexVariant.toInt();
 
    updateTable(groupIndex, fileIndex);
+}
+
+void MainWindow::showExternTreePreview()
+{
+   QTreeWidgetItem* item = m_ui->treeWidget->currentItem();
+   if (!item)
+   {
+      return;
+   }
+   int fileIndex = item->data(0, TREE_ROLE_FILE_INDEX).toInt();
+   QString absoluteFilePath = m_project->getAbsoluteFilePath(fileIndex);
+   QDesktopServices::openUrl(QUrl(absoluteFilePath));
 }
 
 void MainWindow::updateTable(int groupIndex, int fileIndex)

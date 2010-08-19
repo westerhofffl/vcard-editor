@@ -39,6 +39,7 @@ public:
     int getFileGroup(int index) const;
     bool isFileMoved(int index) const;
     void setFileMoved(int index, bool isMoved);
+    QString getAbsoluteFilePath(int index) const;
     QPixmap getFilePixmap(int index) const;
 
     QList<int> getFolderFileList(const QList<int>& fileIndexList) const;
