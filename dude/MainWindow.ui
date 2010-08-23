@@ -217,8 +217,8 @@
        <property name="title">
         <string>Selected directory</string>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <item>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0" colspan="4">
          <widget class="QSplitter" name="splitter_2">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -235,7 +235,28 @@
           </widget>
          </widget>
         </item>
-        <item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="toggleMoveButton">
+          <property name="text">
+           <string>Toggle moved</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QPushButton" name="unmoveButton">
+          <property name="text">
+           <string>Un-move</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="moveButton">
+          <property name="text">
+           <string>Move</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
          <spacer name="horizontalSpacer_2">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -247,27 +268,6 @@
            </size>
           </property>
          </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="toggleMoveButton">
-          <property name="text">
-           <string>Toggle moved</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="unmoveButton">
-          <property name="text">
-           <string>Un-move</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="moveButton">
-          <property name="text">
-           <string>Move</string>
-          </property>
-         </widget>
         </item>
        </layout>
       </widget>
