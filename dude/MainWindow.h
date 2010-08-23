@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 class Project;
+class QPushButton;
 class QTreeWidgetItem;
 class QTableWidgetItem;
 namespace Ui {
@@ -29,6 +30,7 @@ private slots:
    void showTreePreview(QTreeWidgetItem* item);
    void showExternTreePreview();
    void showTablePreview(QTableWidgetItem* item);
+   void showExternTablePreview();
    void checkTableItemState(QTableWidgetItem* item);
 
    void move();
@@ -38,6 +40,9 @@ private slots:
 private:
    void updateTable(int groupIndex, int fileIndex);
    QList<int> getSelectedFileList() const;
+
+   void showPreview(int fileIndex,
+                    QPushButton* button);
 
    enum
    {

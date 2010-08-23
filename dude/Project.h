@@ -17,6 +17,7 @@ public:
             const QString& duplicatesFolderName);
 
     QString getFolderName() const;
+    QString getDuplicatesFolderName() const;
 
     enum Status
     {

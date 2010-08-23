@@ -20,6 +20,11 @@ QString Project::getFolderName() const
    return m_folderName;
 }
 
+QString Project::getDuplicatesFolderName() const
+{
+   return m_duplicatesFolderName;
+}
+
 Project::Status Project::getStatus() const
 {
    return m_status;

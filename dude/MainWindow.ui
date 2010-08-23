@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1065</width>
-    <height>556</height>
+    <height>560</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -51,6 +51,12 @@
       </item>
       <item>
        <widget class="QLabel" name="label">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Duplicates folder:</string>
         </property>
@@ -83,7 +89,7 @@
       <item>
        <widget class="QProgressBar" name="progressBar">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -97,12 +103,8 @@
         <property name="value">
          <number>0</number>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="statusLabel">
-        <property name="text">
-         <string>Not Started</string>
+        <property name="format">
+         <string>%p%</string>
         </property>
        </widget>
       </item>
@@ -215,8 +217,8 @@
        <property name="title">
         <string>Selected directory</string>
        </property>
-       <layout class="QGridLayout" name="gridLayout_4">
-        <item row="0" column="0" colspan="4">
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
          <widget class="QSplitter" name="splitter_2">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -226,57 +228,14 @@
             <set>QAbstractItemView::NoEditTriggers</set>
            </property>
           </widget>
-          <widget class="QScrollArea" name="scrollArea_2">
-           <property name="widgetResizable">
-            <bool>true</bool>
+          <widget class="QPushButton" name="tablePreviewButton">
+           <property name="text">
+            <string>&lt;no preview&gt;</string>
            </property>
-           <widget class="QWidget" name="scrollAreaWidgetContents_2">
-            <property name="geometry">
-             <rect>
-              <x>0</x>
-              <y>0</y>
-              <width>220</width>
-              <height>153</height>
-             </rect>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_2">
-             <property name="margin">
-              <number>0</number>
-             </property>
-             <item row="0" column="0">
-              <widget class="QLabel" name="tablePreviewLabel">
-               <property name="text">
-                <string>&lt;no preview&gt;</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
           </widget>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QPushButton" name="moveButton">
-          <property name="text">
-           <string>Move</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QPushButton" name="unmoveButton">
-          <property name="text">
-           <string>Un-move</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QPushButton" name="toggleMoveButton">
-          <property name="text">
-           <string>Toggle moved</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
+        <item>
          <spacer name="horizontalSpacer_2">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -288,6 +247,27 @@
            </size>
           </property>
          </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="toggleMoveButton">
+          <property name="text">
+           <string>Toggle moved</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="unmoveButton">
+          <property name="text">
+           <string>Un-move</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="moveButton">
+          <property name="text">
+           <string>Move</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -301,7 +281,7 @@
      <x>0</x>
      <y>0</y>
      <width>1065</width>
-     <height>20</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuProject">

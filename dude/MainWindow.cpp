@@ -34,10 +34,14 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_ui->tableWidget, SIGNAL(itemChanged(QTableWidgetItem*)),
             SLOT(checkTableItemState(QTableWidgetItem*)));
 
+    connect(m_ui->tablePreviewButton, SIGNAL(clicked()), SLOT(showExternTablePreview()));
+
     connect(m_ui->moveButton, SIGNAL(clicked()), SLOT(move()));
     connect(m_ui->unmoveButton, SIGNAL(clicked()), SLOT(unmove()));
     connect(m_ui->toggleMoveButton, SIGNAL(clicked()), SLOT(toggleMove()));
 
+    showTreePreview(NULL);
+    showTablePreview(NULL);
 }
 
 MainWindow::~MainWindow()
@@ -67,6 +71,7 @@ void MainWindow::startStopProject()
    {
    case Project::NOT_STARTED:
       m_ui->folderLabel->setText(m_project->getFolderName());
+      m_ui->duplicatesFolderLabel->setText(m_project->getDuplicatesFolderName());
       m_project->scan();
       m_ui->pauseButton->setText("Pause");
       break;
@@ -92,13 +97,14 @@ void MainWindow::setProgressBar(int progress, QString text)
    if (progress == -1)
    {
       m_ui->progressBar->setRange(0, 0);
+      m_ui->progressBar->setFormat(text);
    }
    else
    {
       m_ui->progressBar->setRange(0, 100);
       m_ui->progressBar->setValue(progress);
+      m_ui->progressBar->setFormat(QString("%1 (%p%)").arg(text));
    }
-   m_ui->statusLabel->setText(text);
 }
 
 
@@ -186,53 +192,27 @@ void MainWindow::updateFilter(QTreeWidgetItem* item)
 }
 void MainWindow::showTreePreview(QTreeWidgetItem* item)
 {
-   int fileIndex = item->data(0, TREE_ROLE_FILE_INDEX).toInt();
-   if (m_project->getFilePixmap(fileIndex).isNull())
+   int fileIndex = -1;
+   if (item != NULL)
    {
-      m_ui->treePreviewButton->setText("<no preview>");
+      fileIndex = item->data(0, TREE_ROLE_FILE_INDEX).toInt();
    }
-   else
+   showPreview(fileIndex, m_ui->treePreviewButton);
+
+   if (item != NULL)
    {
-      m_ui->treePreviewButton->setText("");
+      QVariant groupIndexVariant = item->data(0, TREE_ROLE_GROUP_INDEX);
+      if (!groupIndexVariant.isValid())
+      {
+         groupIndexVariant = item->parent()->data(0, TREE_ROLE_GROUP_INDEX);
+      }
+      else
+      {
+         fileIndex = -1;
+      }
+      int groupIndex = groupIndexVariant.toInt();
+      updateTable(groupIndex, fileIndex);
    }
-   QString styleSheetString;
-   styleSheetString.append(QString("QPushButton {"));
-   QString absoluteFilePath = m_project->getAbsoluteFilePath(fileIndex);
-   styleSheetString.append(QString("image: url(%1);").arg(absoluteFilePath));
-   styleSheetString.append(QString("border: 2px solid #8f8f91;"));
-   styleSheetString.append(QString("border-radius: 6px;"));
-   styleSheetString.append(QString("background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"));
-   styleSheetString.append(QString("stop: 0 #f6f7fa, stop: 1 #dadbde);"));
-   styleSheetString.append(QString("padding: 5px ;"));
-   styleSheetString.append(QString("}"));
-
-   styleSheetString.append(QString("QPushButton:pressed {"));
-   styleSheetString.append(QString("   background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"));
-   styleSheetString.append(QString("stop: 0 #dadbde, stop: 1 #f6f7fa);"));
-   styleSheetString.append(QString("            }"));
-
-   styleSheetString.append(QString("QPushButton:flat {"));
-   styleSheetString.append(QString("border: none; /* no border for a flat push button */"));
-   styleSheetString.append(QString("            }"));
-
-   styleSheetString.append(QString("QPushButton:default {"));
-   styleSheetString.append(QString("            border-color: navy; /* make the default button prominent */"));
-   styleSheetString.append(QString("            }"));
-   m_ui->treePreviewButton->setStyleSheet(styleSheetString);
-
-   QVariant groupIndexVariant = item->data(0, TREE_ROLE_GROUP_INDEX);
-   if (!groupIndexVariant.isValid())
-   {
-      groupIndexVariant = item->parent()->data(0, TREE_ROLE_GROUP_INDEX);
-   }
-   else
-   {
-      fileIndex = -1;
-   }
-
-   int groupIndex = groupIndexVariant.toInt();
-
-   updateTable(groupIndex, fileIndex);
 }
 
 void MainWindow::showExternTreePreview()
@@ -244,6 +224,7 @@ void MainWindow::showExternTreePreview()
    }
    int fileIndex = item->data(0, TREE_ROLE_FILE_INDEX).toInt();
    QString absoluteFilePath = m_project->getAbsoluteFilePath(fileIndex);
+   absoluteFilePath.prepend("file://");
    QDesktopServices::openUrl(QUrl(absoluteFilePath));
 }
 
@@ -326,18 +307,26 @@ void MainWindow::updateTable(int groupIndex, int fileIndex)
 }
 
 void MainWindow::showTablePreview(QTableWidgetItem* item)
+{   
+   int fileIndex = -1;
+   if (item != NULL)
+   {
+      fileIndex = item->data(Qt::UserRole).toInt();
+   }
+   showPreview(fileIndex, m_ui->tablePreviewButton);
+}
+
+void MainWindow::showExternTablePreview()
 {
-   if (item == 0)
+   QTableWidgetItem* item = m_ui->tableWidget->currentItem();
+   if (!item)
    {
-      m_ui->tablePreviewLabel->setPixmap(QPixmap());
+      return;
    }
-   else
-   {
-      int fileIndex = item->data(Qt::UserRole).toInt();
-      QSize labelSize = m_ui->tablePreviewLabel->size();
-      m_ui->tablePreviewLabel->setPixmap(
-            m_project->getFilePixmap(fileIndex).scaled(labelSize, Qt::KeepAspectRatio));
-   }
+   int fileIndex = item->data(TREE_ROLE_FILE_INDEX).toInt();
+   QString absoluteFilePath = m_project->getAbsoluteFilePath(fileIndex);
+   absoluteFilePath.prepend("file://");
+   QDesktopServices::openUrl(QUrl(absoluteFilePath));
 }
 
 void MainWindow::checkTableItemState(QTableWidgetItem* item)
@@ -387,4 +376,44 @@ QList<int> MainWindow::getSelectedFileList() const
       fileIndexList.append(fileIndex);
    }
    return fileIndexList;
+}
+
+void MainWindow::showPreview(int fileIndex, QPushButton* button)
+{
+   QString absoluteFilePath;
+   if ((fileIndex == -1) || m_project->getFilePixmap(fileIndex).isNull())
+   {
+      button->setText("<no preview>");
+   }
+   else
+   {
+      button->setText("");
+      absoluteFilePath = m_project->getAbsoluteFilePath(fileIndex);
+   }
+   QString styleSheetString;
+   styleSheetString.append(QString("QPushButton {"));
+   if (!absoluteFilePath.isEmpty())
+   {
+      styleSheetString.append(QString("image: url(%1);").arg(absoluteFilePath));
+   }
+   styleSheetString.append(QString("border: 2px solid #8f8f91;"));
+   styleSheetString.append(QString("border-radius: 6px;"));
+   styleSheetString.append(QString("background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"));
+   styleSheetString.append(QString("stop: 0 #f6f7fa, stop: 1 #dadbde);"));
+   styleSheetString.append(QString("padding: 5px ;"));
+   styleSheetString.append(QString("}"));
+
+   styleSheetString.append(QString("QPushButton:pressed {"));
+   styleSheetString.append(QString("   background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"));
+   styleSheetString.append(QString("stop: 0 #dadbde, stop: 1 #f6f7fa);"));
+   styleSheetString.append(QString("            }"));
+
+   styleSheetString.append(QString("QPushButton:flat {"));
+   styleSheetString.append(QString("border: none; /* no border for a flat push button */"));
+   styleSheetString.append(QString("            }"));
+
+   styleSheetString.append(QString("QPushButton:default {"));
+   styleSheetString.append(QString("            border-color: navy; /* make the default button prominent */"));
+   styleSheetString.append(QString("            }"));
+   button->setStyleSheet(styleSheetString);
 }
