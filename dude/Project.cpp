@@ -211,50 +211,34 @@ void Project::doScan()
       return;
    }
    int size = m_fileSizeList.at(index);
-   if (m_fileSizeIndexHash.count(size) == 1)
+   QFileInfo fileInfo(getFullFileFolderName(index), getFileName(index));
+   QFile file(fileInfo.absoluteFilePath());
+   if (!file.open(QIODevice::ReadOnly))
    {
-      //uninteressant
-      m_fileMd4List.append(QByteArray());
-      int groupIndex = m_groupMd4List.size();
-      m_fileGroupList.append(groupIndex);
-      m_groupMd4List.append(QByteArray());
-      m_folderFileHash.insertMulti(groupIndex, index);
-
-      emit groupUpdated(groupIndex);
-      qWarning("%i ist kein duplikat", index);
+      qWarning("nicht lesbar");
+      m_fileNameList.removeAt(index);
+      m_fileFolderNameList.removeAt(index);
+      m_fileSizeList.removeAt(index);
    }
    else
    {
-      qWarning("%i ist ein duplikat", index);
-      QFileInfo fileInfo(getFullFileFolderName(index), getFileName(index));
-      QFile file(fileInfo.absoluteFilePath());
-      if (!file.open(QIODevice::ReadOnly))
+      QByteArray fileContent = file.readAll();
+      QByteArray md4 = QCryptographicHash::hash(fileContent, QCryptographicHash::Md4);
+      qWarning("gelesen %i, hash %i", fileContent.size(), md4.size());
+      m_fileMd4List.append(md4);
+      int groupIndex = m_groupMd4List.indexOf(md4);
+      if (groupIndex == -1)
       {
-         qWarning("nicht lesbar");
-         m_fileNameList.removeAt(index);
-         m_fileFolderNameList.removeAt(index);
-         m_fileSizeList.removeAt(index);
+         groupIndex = m_groupMd4List.size();
+         m_groupMd4List.append(md4);
       }
-      else
-      {
-         QByteArray fileContent = file.readAll();
-         QByteArray md4 = QCryptographicHash::hash(fileContent, QCryptographicHash::Md4);
-         qWarning("gelesen %i, hash %i", fileContent.size(), md4.size());
-         m_fileMd4List.append(md4);
-         int groupIndex = m_groupMd4List.indexOf(md4);
-         if (groupIndex == -1)
-         {
-            groupIndex = m_groupMd4List.size();
-            m_groupMd4List.append(md4);
-         }
-         m_folderFileHash.insertMulti(groupIndex, index);
-         m_fileGroupList.append(groupIndex);
-         emit groupUpdated(groupIndex);
+      m_folderFileHash.insertMulti(groupIndex, index);
+      m_fileGroupList.append(groupIndex);
+      emit groupUpdated(groupIndex);
 
-         int progress = 100 * (index + 1);
-         progress = progress / m_fileNameList.size();
-         emit progressStatus(progress, QString("Parsing %1").arg(getFileName(index)));
-      }
+      int progress = 100 * (index + 1);
+      progress = progress / m_fileNameList.size();
+      emit progressStatus(progress, QString("Parsing %1").arg(getFileName(index)));
    }
 }
 
