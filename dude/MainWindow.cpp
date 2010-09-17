@@ -233,7 +233,16 @@ void MainWindow::showExternTreePreview()
 
 void MainWindow::updateTable(int groupIndex, int fileIndex)
 {
+   m_ui->tableWidget->viewport()->setUpdatesEnabled(false);
+   m_ui->tableWidget->blockSignals(true);
+
    QApplication::setOverrideCursor(Qt::WaitCursor);
+   int currentFileIndex = -1;
+   QTableWidgetItem* currentItem = m_ui->tableWidget->currentItem();
+   if (currentItem != NULL)
+   {
+      currentFileIndex = currentItem->data(Qt::UserRole).toInt();
+   }
 
    m_ui->tableWidget->clear();
    m_ui->tableWidget->setRowCount(0);
@@ -295,6 +304,10 @@ void MainWindow::updateTable(int groupIndex, int fileIndex)
          fileItem->setCheckState(m_project->isFileMoved(fileIndex) ? Qt::Checked : Qt::Unchecked);
          fileItem->setData(Qt::UserRole, fileIndex);
          m_ui->tableWidget->setItem(row, column, fileItem);
+         if (fileIndex == currentFileIndex)
+         {
+            currentItem = fileItem;
+         }
       }
       int firstFileIndex = fileIndexList.first();
       m_ui->tableWidget->setVerticalHeaderItem(row, new QTableWidgetItem(
@@ -305,6 +318,10 @@ void MainWindow::updateTable(int groupIndex, int fileIndex)
    m_ui->tableWidget->setColumnCount(columnList.size());
    QHeaderView* horizontalHeader =  m_ui->tableWidget->horizontalHeader();
    horizontalHeader->setResizeMode(QHeaderView::ResizeToContents);
+
+   m_ui->tableWidget->viewport()->setUpdatesEnabled(true);
+   m_ui->tableWidget->blockSignals(false);
+   m_ui->tableWidget->setCurrentItem(currentItem);
 
    QApplication::restoreOverrideCursor();
 }
