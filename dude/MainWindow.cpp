@@ -186,6 +186,9 @@ void MainWindow::updateFilter(QTreeWidgetItem* item)
    case 2:
       item->setHidden((fileCount <= 1) || ((fileCount - movedCount) <= 1));
       break;
+   case 3:
+      item->setHidden(fileCount != movedCount);
+      break;
    default:
       break;
    };      
@@ -261,7 +264,7 @@ void MainWindow::updateTable(int groupIndex, int fileIndex)
    {
       QList<int> fileIndexList =
          m_project->getGroupFileIndexSet(groupIndex).toList();
-      if (fileIndexList.size() <= 1)
+      if (fileIndexList.size() < 1)
       {
          continue;
       }
