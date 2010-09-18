@@ -3,6 +3,7 @@
 #include "Project.h"
 #include "ProjectSettingsDialog.h"
 
+#include <QButtonGroup>
 #include <QDesktopServices>
 #include <QDir>
 #include <QFileInfo>
@@ -20,8 +21,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_ui->actionNew, SIGNAL(triggered()), SLOT(createNewProject()));
     connect(m_ui->pauseButton, SIGNAL(clicked()), SLOT(startStopProject()));
 
-    connect(m_ui->filterComboBox, SIGNAL(currentIndexChanged(int)),
-       SLOT(updateFilter()));
+    m_showButtonGroup = new QButtonGroup(this);
+    m_showButtonGroup->addButton(m_ui->showAllRadioButton, SHOW_ALL);
+    m_showButtonGroup->addButton(m_ui->showDuplicatesOnlyRadioButton, SHOW_DUPLICATED_ONLY);
+    m_showButtonGroup->addButton(m_ui->showNotResolvedOnlyRadioButton, SHOW_NOT_RESOLVED_ONLY);
+    m_showButtonGroup->addButton(m_ui->showRemovedOnlyRadioButton, SHOW_REMOVED_ONLY);
+    connect(m_showButtonGroup, SIGNAL(buttonClicked(int)), SLOT(updateFilter()));
 
     connect(m_ui->treeWidget, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)),
             SLOT(showTreePreview(QTreeWidgetItem*)));
@@ -39,6 +44,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_ui->moveButton, SIGNAL(clicked()), SLOT(move()));
     connect(m_ui->unmoveButton, SIGNAL(clicked()), SLOT(unmove()));
     connect(m_ui->toggleMoveButton, SIGNAL(clicked()), SLOT(toggleMove()));
+
+    m_ui->treeWidget->header()->setResizeMode(QHeaderView::ResizeToContents);
 
     showTreePreview(NULL);
     showTablePreview(NULL);
@@ -125,7 +132,25 @@ void MainWindow::updateGroup(int index)
    }
    QStringList fileNameList = fileNameSet.toList();
    qSort(fileNameList);
-   groupItem->setText(0, fileNameList.join(","));
+
+   QString groupItemText;
+   int maxCount = 0;
+   QMap<QString, int> fileNameCountMap;
+   foreach(const QString& fileName, fileNameList)
+   {
+      int count = fileNameCountMap.value(fileName, 1) + 1;
+      fileNameCountMap[fileName] = count;
+      if (maxCount < count)
+      {
+         groupItemText = fileName;
+         maxCount = count;
+      }
+   }
+   if (fileNameList.size() > 1)
+   {
+      groupItemText.append(",...");
+   }
+   groupItem->setText(0, groupItemText);
    int firstFileIndex = fileIndexList.first();
    groupItem->setData(0, TREE_ROLE_FILE_INDEX, firstFileIndex);
    groupItem->setData(0, TREE_ROLE_GROUP_INDEX, index);
@@ -175,18 +200,18 @@ void MainWindow::updateFilter(QTreeWidgetItem* item)
 {
    int fileCount = item->data(0, TREE_ROLE_FILE_COUNT).toInt();
    int movedCount = item->data(0, TREE_ROLE_MOVED_COUNT).toInt();
-   switch(m_ui->filterComboBox->currentIndex())
+   switch(m_showButtonGroup->checkedId())
    {
-   case 0:
+   case SHOW_ALL:
       item->setHidden(false);
       break;
-   case 1:
+   case SHOW_DUPLICATED_ONLY:
       item->setHidden(fileCount <= 1);
       break;
-   case 2:
+   case SHOW_NOT_RESOLVED_ONLY:
       item->setHidden((fileCount <= 1) || ((fileCount - movedCount) <= 1));
       break;
-   case 3:
+   case SHOW_REMOVED_ONLY:
       item->setHidden(fileCount != movedCount);
       break;
    default:
@@ -231,7 +256,7 @@ void MainWindow::showExternTreePreview()
    QDesktopServices::openUrl(QUrl(absoluteFilePath));
 }
 
-void MainWindow::updateTable(int groupIndex, int fileIndex)
+void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
 {
    m_ui->tableWidget->viewport()->setUpdatesEnabled(false);
    m_ui->tableWidget->blockSignals(true);
@@ -253,13 +278,13 @@ void MainWindow::updateTable(int groupIndex, int fileIndex)
    m_ui->tableWidget->setColumnCount(10);
 
    QList<int> selectedFileList;
-   if (fileIndex != -1)
+   if (selectedFileIndex != -1)
    {
-      selectedFileList.append(fileIndex);
+      selectedFileList.append(selectedFileIndex);
    }
    else
    {
-      selectedFileList = m_project->getGroupFileIndexSet(groupIndex).toList();
+      selectedFileList = m_project->getGroupFileIndexSet(selectedGroupIndex).toList();
       qSort(selectedFileList);
    }
 
@@ -303,6 +328,13 @@ void MainWindow::updateTable(int groupIndex, int fileIndex)
          QTableWidgetItem* fileItem = new QTableWidgetItem(m_project->getFileName(fileIndex));
          fileItem->setCheckState(m_project->isFileMoved(fileIndex) ? Qt::Checked : Qt::Unchecked);
          fileItem->setData(Qt::UserRole, fileIndex);
+         if (((groupIndex == selectedGroupIndex) && (selectedFileIndex == -1)) ||
+             (fileIndex == selectedFileIndex))
+         {
+            QFont font = fileItem->font();
+            font.setBold(true);
+            fileItem->setFont(font);
+         }
          m_ui->tableWidget->setItem(row, column, fileItem);
          if (fileIndex == currentFileIndex)
          {
