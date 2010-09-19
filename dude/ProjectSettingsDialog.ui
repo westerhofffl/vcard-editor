@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>520</width>
-    <height>93</height>
+    <width>761</width>
+    <height>111</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,7 +24,7 @@
    <item row="0" column="1">
     <widget class="QLineEdit" name="folderLineEdit">
      <property name="text">
-      <string>G:/_pics_/u</string>
+      <string>/home/gogi/Desktop/pics/orig</string>
      </property>
     </widget>
    </item>
@@ -81,6 +81,15 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>folderLineEdit</tabstop>
+  <tabstop>folderToolButton</tabstop>
+  <tabstop>subfolderCheckBox</tabstop>
+  <tabstop>duplicatesLineEdit</tabstop>
+  <tabstop>duplicatesToolButton</tabstop>
+  <tabstop>duplicatesDefaultCheckBox</tabstop>
+  <tabstop>buttonBox</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
