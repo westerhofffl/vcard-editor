@@ -17,6 +17,11 @@ MainWindow::MainWindow(QWidget *parent) :
     m_project(0)
 {
     m_ui->setupUi(this);
+    setWindowTitle("Duplicates detector");
+
+    m_ui->filesGroupBox->setEnabled(false);
+    m_ui->foldersGroupBox->setEnabled(false);
+    m_ui->pauseButton->setEnabled(false);
 
     connect(m_ui->actionNew, SIGNAL(triggered()), SLOT(createNewProject()));
     connect(m_ui->pauseButton, SIGNAL(clicked()), SLOT(startStopProject()));
@@ -68,6 +73,11 @@ void MainWindow::createNewProject()
               SLOT(setProgressBar(int, QString)));
       connect(m_project, SIGNAL(groupUpdated(int)),
               SLOT(updateGroup(int)));
+
+      m_ui->filesGroupBox->setEnabled(true);
+      m_ui->foldersGroupBox->setEnabled(true);
+      m_ui->pauseButton->setEnabled(true);
+
       startStopProject();
    }
 }
@@ -111,6 +121,11 @@ void MainWindow::setProgressBar(int progress, QString text)
       m_ui->progressBar->setRange(0, 100);
       m_ui->progressBar->setValue(progress);
       m_ui->progressBar->setFormat(QString("%1 (%p%)").arg(text));
+      if (progress == 100)
+      {
+         m_ui->pauseButton->setText("Ready");
+         m_ui->pauseButton->setEnabled(false);
+      }
    }
 }
 
@@ -268,6 +283,21 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
    {
       currentFileIndex = currentItem->data(Qt::UserRole).toInt();
    }
+   QSet<int> selectedFileIndexSet;
+   foreach(QTableWidgetItem* selectedItem, m_ui->tableWidget->selectedItems())
+   {
+      if (selectedItem == NULL)
+      {
+         continue;
+      }
+      QVariant dataVariant = selectedItem->data(Qt::UserRole);
+      if (!dataVariant.isValid())
+      {
+         continue;
+      }
+      int currentFileIndex = dataVariant.toInt();
+      selectedFileIndexSet.insert(currentFileIndex);
+   }
 
    m_ui->tableWidget->clear();
    m_ui->tableWidget->setRowCount(0);
@@ -340,6 +370,10 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
          {
             currentItem = fileItem;
          }
+         if (selectedFileIndexSet.contains(fileIndex))
+         {
+            fileItem->setSelected(true);
+         }
       }
       int firstFileIndex = fileIndexList.first();
       m_ui->tableWidget->setVerticalHeaderItem(row, new QTableWidgetItem(
@@ -353,7 +387,7 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
 
    m_ui->tableWidget->viewport()->setUpdatesEnabled(true);
    m_ui->tableWidget->blockSignals(false);
-   m_ui->tableWidget->setCurrentItem(currentItem);
+   m_ui->tableWidget->setCurrentItem(currentItem,QItemSelectionModel::NoUpdate);
 
    QApplication::restoreOverrideCursor();
 }

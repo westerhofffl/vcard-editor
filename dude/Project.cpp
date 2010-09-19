@@ -210,7 +210,6 @@ void Project::doScan()
       emit progressStatus(100, "Finished");
       return;
    }
-   int size = m_fileSizeList.at(index);
    QFileInfo fileInfo(getFullFileFolderName(index), getFileName(index));
    QFile file(fileInfo.absoluteFilePath());
    if (!file.open(QIODevice::ReadOnly))

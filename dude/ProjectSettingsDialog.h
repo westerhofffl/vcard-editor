@@ -23,6 +23,7 @@ private slots:
    void chooseFolder();
    void chooseDuplicatesFolder();
    void setDefaultDuplicatesFolder();
+   void checkSettings();
 
 private:
     Ui::ProjectSettingsDialog *m_ui;
