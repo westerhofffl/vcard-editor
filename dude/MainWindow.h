@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 class Project;
+class QButtonGroup;
 class QPushButton;
 class QTreeWidgetItem;
 class QTableWidgetItem;
@@ -52,9 +53,18 @@ private:
       TREE_ROLE_MOVED_COUNT
    };
 
+   enum
+   {
+      SHOW_ALL,
+      SHOW_DUPLICATED_ONLY,
+      SHOW_NOT_RESOLVED_ONLY,
+      SHOW_REMOVED_ONLY
+   };
+
 private:
     Ui::MainWindow *m_ui;
     Project* m_project;
+    QButtonGroup* m_showButtonGroup;
 };
 
 #endif // MAINWINDOW_H

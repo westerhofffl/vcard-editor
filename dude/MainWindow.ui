@@ -134,58 +134,61 @@
        </property>
        <layout class="QGridLayout" name="gridLayout">
         <item row="0" column="0">
-         <widget class="QComboBox" name="filterComboBox">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="currentIndex">
-           <number>0</number>
-          </property>
-          <property name="sizeAdjustPolicy">
-           <enum>QComboBox::AdjustToContents</enum>
-          </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
-           <property name="text">
-            <string>Show all</string>
-           </property>
+           <widget class="QLabel" name="showLabel">
+            <property name="text">
+             <string>Show:</string>
+            </property>
+           </widget>
           </item>
           <item>
-           <property name="text">
-            <string>Show duplicated only</string>
-           </property>
+           <widget class="QRadioButton" name="showAllRadioButton">
+            <property name="text">
+             <string>all</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
           <item>
-           <property name="text">
-            <string>Show not resolved only</string>
-           </property>
+           <widget class="QRadioButton" name="showDuplicatesOnlyRadioButton">
+            <property name="text">
+             <string>duplicates only</string>
+            </property>
+           </widget>
           </item>
           <item>
-           <property name="text">
-            <string>Show completly removed only</string>
-           </property>
+           <widget class="QRadioButton" name="showNotResolvedOnlyRadioButton">
+            <property name="text">
+             <string>not resolved only</string>
+            </property>
+           </widget>
           </item>
-         </widget>
+          <item>
+           <widget class="QRadioButton" name="showRemovedOnlyRadioButton">
+            <property name="text">
+             <string>removed only</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>828</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </item>
-        <item row="0" column="1">
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>828</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="1" column="0" colspan="2">
+        <item row="1" column="0">
          <widget class="QSplitter" name="splitter">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -229,7 +232,7 @@
       </widget>
       <widget class="QGroupBox" name="groupBox_2">
        <property name="title">
-        <string>Selected directory</string>
+        <string>Selected directories</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
         <item row="0" column="0" colspan="4">
@@ -241,6 +244,9 @@
            <property name="editTriggers">
             <set>QAbstractItemView::NoEditTriggers</set>
            </property>
+           <attribute name="verticalHeaderVisible">
+            <bool>false</bool>
+           </attribute>
           </widget>
           <widget class="QPushButton" name="tablePreviewButton">
            <property name="text">
