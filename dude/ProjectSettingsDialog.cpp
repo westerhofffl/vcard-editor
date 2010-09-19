@@ -1,6 +1,7 @@
 #include "ProjectSettingsDialog.h"
 #include "ui_ProjectSettingsDialog.h"
 
+#include <QDesktopServices>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -22,6 +23,7 @@ ProjectSettingsDialog::ProjectSettingsDialog(QWidget *parent) :
     connect(m_ui->buttonBox, SIGNAL(accepted()), SLOT(checkSettings()));
     connect(m_ui->buttonBox, SIGNAL(rejected()), SLOT(reject()));
 
+    m_ui->folderLineEdit->setText(QDesktopServices::storageLocation(QDesktopServices::PicturesLocation));
     setDefaultDuplicatesFolder();
 }
 
@@ -45,7 +47,7 @@ void ProjectSettingsDialog::chooseFolder()
    QString folderName = QFileDialog::getExistingDirectory(this, "Choose a folder", getFolderName());
    if (!folderName.isEmpty())
    {
-      m_ui->folderLineEdit->setText(folderName);
+      m_ui->folderLineEdit->setText(QDir::toNativeSeparators(folderName));
    }
 }
 
@@ -54,7 +56,7 @@ void ProjectSettingsDialog::chooseDuplicatesFolder()
    QString folderName = QFileDialog::getExistingDirectory(this, "Choose a folder", getDuplicatesFolderName());
    if (!folderName.isEmpty())
    {
-      m_ui->duplicatesLineEdit->setText(folderName);
+      m_ui->duplicatesLineEdit->setText(QDir::toNativeSeparators(folderName));
    }
 }
 
@@ -62,9 +64,16 @@ void ProjectSettingsDialog::setDefaultDuplicatesFolder()
 {
    if (m_ui->duplicatesDefaultCheckBox->isChecked())
    {
-      m_ui->duplicatesLineEdit->setText(m_ui->folderLineEdit->text().append("_dup"));
+      QString folderName = QDir::toNativeSeparators(getFolderName());
+      if (folderName.endsWith(QDir::separator()))
+      {
+         folderName = folderName.left(folderName.length() - 1);
+      }
+
+      m_ui->duplicatesLineEdit->setText(folderName.append("_dup"));
    }
    m_ui->duplicatesLineEdit->setEnabled(!m_ui->duplicatesDefaultCheckBox->isChecked());
+   m_ui->duplicatesToolButton->setEnabled(!m_ui->duplicatesDefaultCheckBox->isChecked());
 }
 
 bool ProjectSettingsDialog::parseSubfolders() const
