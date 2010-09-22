@@ -30,7 +30,7 @@ private slots:
 
    void showTreePreview(QTreeWidgetItem* item);
    void showExternTreePreview();
-   void showTablePreview(QTableWidgetItem* item);
+   void showTablePreview();
    void showExternTablePreview();
    void checkTableItemState(QTableWidgetItem* item);
 
@@ -65,6 +65,9 @@ private:
     Ui::MainWindow *m_ui;
     Project* m_project;
     QButtonGroup* m_showButtonGroup;
+
+    int m_tableGroupIndex;
+    int m_tableFileIndex;
 };
 
 #endif // MAINWINDOW_H

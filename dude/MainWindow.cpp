@@ -14,7 +14,9 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     m_ui(new Ui::MainWindow),
-    m_project(0)
+    m_project(0),
+    m_tableGroupIndex(-1),
+    m_tableFileIndex(-1)
 {
     m_ui->setupUi(this);
     setWindowTitle("Duplicates detector");
@@ -38,8 +40,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(m_ui->treePreviewButton, SIGNAL(clicked()), SLOT(showExternTreePreview()));
 
-    connect(m_ui->tableWidget, SIGNAL(currentItemChanged(QTableWidgetItem*,QTableWidgetItem*)),
-       SLOT(showTablePreview(QTableWidgetItem*)));
+    connect(m_ui->tableWidget, SIGNAL(itemSelectionChanged()),
+       SLOT(showTablePreview()));
 
     connect(m_ui->tableWidget, SIGNAL(itemChanged(QTableWidgetItem*)),
             SLOT(checkTableItemState(QTableWidgetItem*)));
@@ -53,7 +55,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_ui->treeWidget->header()->setResizeMode(QHeaderView::ResizeToContents);
 
     showTreePreview(NULL);
-    showTablePreview(NULL);
+    showTablePreview();
 }
 
 MainWindow::~MainWindow()
@@ -174,11 +176,15 @@ void MainWindow::updateGroup(int index)
    QByteArray md4 = m_project->getFileMd4(firstFileIndex);
    groupItem->setText(3, m_project->getFileMd4(firstFileIndex).toHex());
 
-   qDeleteAll(groupItem->takeChildren());
    int movedCount = 0;
-   foreach(int fileIndex, fileIndexList)
+   for(int row = 0; row < fileIndexList.size(); ++row)
    {
-      QTreeWidgetItem* fileItem = new QTreeWidgetItem(groupItem);
+      QTreeWidgetItem* fileItem = groupItem->child(row);
+      if (fileItem == NULL)
+      {
+         fileItem = new QTreeWidgetItem(groupItem);
+      }
+      int fileIndex = fileIndexList[row];
       QFileInfo fileInfo(m_project->getFileFolderName(fileIndex), m_project->getFileName(fileIndex));
       fileItem->setText(0, fileInfo.absoluteFilePath());
       fileItem->setData(0, TREE_ROLE_FILE_INDEX, fileIndex);
@@ -194,10 +200,7 @@ void MainWindow::updateGroup(int index)
                       .arg(movedCount));
    groupItem->setData(0, TREE_ROLE_MOVED_COUNT, movedCount);
 
-   if (groupItem->isSelected())
-   {
-      updateTable(index, -1);
-   }
+   updateTable(-1, -1);
    updateFilter(groupItem);
 }
 
@@ -273,6 +276,21 @@ void MainWindow::showExternTreePreview()
 
 void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
 {
+   if (selectedGroupIndex == -1 && selectedFileIndex == -1)
+   {
+      if (m_tableGroupIndex == -1 && m_tableFileIndex == -1)
+      {
+         return;
+      }
+      selectedGroupIndex = m_tableGroupIndex;
+      selectedFileIndex = m_tableFileIndex;
+   }
+   else
+   {
+      m_tableGroupIndex = selectedGroupIndex;
+      m_tableFileIndex = selectedFileIndex;
+   }
+
    m_ui->tableWidget->viewport()->setUpdatesEnabled(false);
    m_ui->tableWidget->blockSignals(true);
 
@@ -286,15 +304,7 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
    QSet<int> selectedFileIndexSet;
    foreach(QTableWidgetItem* selectedItem, m_ui->tableWidget->selectedItems())
    {
-      if (selectedItem == NULL)
-      {
-         continue;
-      }
       QVariant dataVariant = selectedItem->data(Qt::UserRole);
-      if (!dataVariant.isValid())
-      {
-         continue;
-      }
       int currentFileIndex = dataVariant.toInt();
       selectedFileIndexSet.insert(currentFileIndex);
    }
@@ -341,9 +351,9 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
       {
          QString folderName = m_project->getFileFolderName(fileIndex);
          int column = columnList.indexOf(folderName);
-         if (m_ui->tableWidget->item(row, column) != NULL)
+         while ((column != -1) && (m_ui->tableWidget->item(row, column) != NULL))
          {
-            column = -1;
+            column = columnList.indexOf(folderName, column + 1);
          }
          if (column == -1)
          {
@@ -356,6 +366,7 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
             m_ui->tableWidget->setHorizontalHeaderLabels(columnList);
          }
          QTableWidgetItem* fileItem = new QTableWidgetItem(m_project->getFileName(fileIndex));
+         qWarning("QTableWidgetItem for %s, checked: %i", m_project->getFileName(fileIndex).toAscii().data(), m_project->isFileMoved(fileIndex));
          fileItem->setCheckState(m_project->isFileMoved(fileIndex) ? Qt::Checked : Qt::Unchecked);
          fileItem->setData(Qt::UserRole, fileIndex);
          if (((groupIndex == selectedGroupIndex) && (selectedFileIndex == -1)) ||
@@ -392,12 +403,13 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
    QApplication::restoreOverrideCursor();
 }
 
-void MainWindow::showTablePreview(QTableWidgetItem* item)
+void MainWindow::showTablePreview()
 {   
    int fileIndex = -1;
-   if (item != NULL)
-   {
-      fileIndex = item->data(Qt::UserRole).toInt();
+   QList<QTableWidgetItem*> itemList = m_ui->tableWidget->selectedItems();
+   if (itemList.size() == 1)
+   {      
+      fileIndex = itemList.first()->data(Qt::UserRole).toInt();
    }
    showPreview(fileIndex, m_ui->tablePreviewButton);
 }
