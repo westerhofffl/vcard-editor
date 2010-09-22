@@ -25,6 +25,9 @@ ProjectSettingsDialog::ProjectSettingsDialog(QWidget *parent) :
 
     m_ui->folderLineEdit->setText(QDesktopServices::storageLocation(QDesktopServices::PicturesLocation));
     setDefaultDuplicatesFolder();
+
+    m_ui->folderLineEdit->setFocus();
+    m_ui->folderLineEdit->selectAll();
 }
 
 ProjectSettingsDialog::~ProjectSettingsDialog()

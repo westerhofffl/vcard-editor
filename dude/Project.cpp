@@ -34,6 +34,7 @@ void Project::scan()
 {
    if (m_status == PAUSED)
    {
+      qWarning("start scan");
       m_status = SCANNING;
    }
    m_timer.start();
@@ -41,12 +42,14 @@ void Project::scan()
 
 void Project::pause()
 {
+   qWarning("pause scan");
    m_status = PAUSED;
    m_timer.stop();
 }
 
 void Project::rescan()
 {
+   qWarning("rescan");
    m_status = NOT_STARTED;
    scan();
 }
@@ -97,11 +100,11 @@ void Project::setFileMoved(int index, bool isMoved)
    bool wasMoved = m_movedFileIndexSet.contains(index);
    if (isMoved == wasMoved)
    {
+      qWarning("moved status for %s not changed", getFileName(index).toAscii().data());
       return;
    }
 
    QString sourceFilePath = getFullFileFolderName(index).append("/").append(getFileName(index));
-   QFileInfo sourceFileInfo(sourceFilePath);
    if (isMoved)
    {
       m_movedFileIndexSet.insert(index);
@@ -129,6 +132,7 @@ void Project::setFileMoved(int index, bool isMoved)
       }
    }
    QFile::rename(sourceFilePath, targetFilePath);
+   qWarning("moved status for %s changed to %i", getFileName(index).toAscii().data(), isMoved);
    emit groupUpdated(m_fileGroupList.at(index));
 }
 
@@ -196,8 +200,8 @@ void Project::doScan()
 {
    if (m_status == NOT_STARTED)
    {
-      qWarning("scan start");
-      emit progressStatus(-1, "Starting...");
+      qWarning("scan init");
+      emit progressStatus(-1, "Init...");
       addFolderFiles(m_folderName, false);
       addFolderFiles(m_duplicatesFolderName, true);
       m_status = SCANNING;
@@ -206,15 +210,17 @@ void Project::doScan()
    int index = m_fileMd4List.size();
    if (index == m_fileNameList.size())
    {
+      qWarning("scan finished");
       m_status = FINISHED;
       emit progressStatus(100, "Finished");
+      m_timer.stop();
       return;
    }
    QFileInfo fileInfo(getFullFileFolderName(index), getFileName(index));
    QFile file(fileInfo.absoluteFilePath());
    if (!file.open(QIODevice::ReadOnly))
    {
-      qWarning("nicht lesbar");
+      qWarning("%s nicht lesbar", fileInfo.absoluteFilePath().toAscii().data());
       m_fileNameList.removeAt(index);
       m_fileFolderNameList.removeAt(index);
       m_fileSizeList.removeAt(index);
@@ -223,7 +229,7 @@ void Project::doScan()
    {
       QByteArray fileContent = file.readAll();
       QByteArray md4 = QCryptographicHash::hash(fileContent, QCryptographicHash::Md4);
-      qWarning("gelesen %i, hash %i", fileContent.size(), md4.size());
+      qWarning("%s read, size: %i", fileInfo.absoluteFilePath().toAscii().data(), fileContent.size());
       m_fileMd4List.append(md4);
       int groupIndex = m_groupMd4List.indexOf(md4);
       if (groupIndex == -1)
