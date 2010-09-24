@@ -234,7 +234,7 @@ void MainWindow::updateFilter(QTreeWidgetItem* item)
       break;
    default:
       break;
-   };      
+   };
 }
 void MainWindow::showTreePreview(QTreeWidgetItem* item)
 {
@@ -270,8 +270,7 @@ void MainWindow::showExternTreePreview()
    }
    int fileIndex = item->data(0, TREE_ROLE_FILE_INDEX).toInt();
    QString absoluteFilePath = m_project->getAbsoluteFilePath(fileIndex);
-   absoluteFilePath.prepend("file://");
-   QDesktopServices::openUrl(QUrl(absoluteFilePath));
+   QDesktopServices::openUrl(QUrl::fromLocalFile(absoluteFilePath));
 }
 
 void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
@@ -404,11 +403,11 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
 }
 
 void MainWindow::showTablePreview()
-{   
+{
    int fileIndex = -1;
    QList<QTableWidgetItem*> itemList = m_ui->tableWidget->selectedItems();
    if (itemList.size() == 1)
-   {      
+   {
       fileIndex = itemList.first()->data(Qt::UserRole).toInt();
    }
    showPreview(fileIndex, m_ui->tablePreviewButton);
@@ -423,8 +422,7 @@ void MainWindow::showExternTablePreview()
    }
    int fileIndex = item->data(TREE_ROLE_FILE_INDEX).toInt();
    QString absoluteFilePath = m_project->getAbsoluteFilePath(fileIndex);
-   absoluteFilePath.prepend("file://");
-   QDesktopServices::openUrl(QUrl(absoluteFilePath));
+   QDesktopServices::openUrl(QUrl::fromLocalFile(absoluteFilePath));
 }
 
 void MainWindow::checkTableItemState(QTableWidgetItem* item)
