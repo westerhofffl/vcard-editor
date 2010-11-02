@@ -68,6 +68,11 @@ private:
 
     int m_tableGroupIndex;
     int m_tableFileIndex;
+
+    int m_totalGroupCount;
+    int m_duplicatesGroupCount;
+    int m_notResolvedGroupCount;
+    int m_removedGroupCount;
 };
 
 #endif // MAINWINDOW_H
