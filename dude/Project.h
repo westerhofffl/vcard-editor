@@ -36,7 +36,7 @@ public:
     QString getFileFolderName(int index) const;
     QString getFullFileFolderName(int index) const;
     int getFileSize(int index) const;
-    QByteArray getFileMd4(int index) const;
+    QByteArray getFileCheckSum(int index) const;
     int getFileGroup(int index) const;
     bool isFileMoved(int index) const;
     void setFileMoved(int index, bool isMoved);
@@ -59,7 +59,6 @@ signals:
    void fileUpdated(int index);
    void groupUpdated(int index);
 
-
 private:
    void addFolderFiles(const QString& folderName,
                        bool isDuplicatesFolder);
@@ -70,6 +69,45 @@ private:
 
     Status m_status;
 
+    class FileDetails
+    {
+    public:
+        FileDetails(const QString& fileName,
+                    const QString& relativePath,
+                    int size,
+                    const QByteArray& md4,
+                    bool isInBackupDir) :
+            m_fileName(fileName),
+            m_relativePath(relativePath),
+            m_size(size),
+            m_md4(md4),
+            m_isInBackupDir(isInBackupDir)
+        {
+        }
+
+        inline const QString& getFileName() const { return m_fileName; }
+        inline const QString& getRelativePath() const { return m_relativePath; }
+        inline int getSize() const { return m_size; }
+        inline QByteArray getCheckSum() const { return m_md4; }
+        inline bool isInBackupDir() const { return m_isInBackupDir; }
+        inline void setInBackupDir(bool isInBackupDir) { m_isInBackupDir = isInBackupDir; }
+    private:
+        const QString m_fileName;
+        const QString m_relativePath;
+        const int m_size;
+        const QByteArray m_md4;
+        bool m_isInBackupDir;
+    };
+
+    QList<FileDetails*> m_fileDetailsList;
+
+    QList<QByteArray> m_checkSumList;
+    QHash<QByteArray, int> m_checkSumIndexHash;
+
+    QMultiHash<int, int> m_checkSumIndexFileIndexHash;
+
+    QStringList m_notParsedFilePathList;
+    /*
     QStringList m_fileNameList;
     QStringList m_fileFolderNameList;
     QList<int> m_fileSizeList;
@@ -80,7 +118,7 @@ private:
     QMultiHash<int, int> m_fileSizeIndexHash;
     QList<QByteArray> m_groupMd4List;
     QMultiHash<int, int> m_folderFileHash;
-
+    */
     QTimer m_timer;
 };
 
