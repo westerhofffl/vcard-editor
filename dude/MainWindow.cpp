@@ -452,11 +452,22 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
                 itemCount++;
             }
         }
-        QString columnName = QString("%1\n%2 pics")
-                             .arg(columnList[column].isEmpty() ? "/" : columnList[column])
-                             .arg(itemCount);
+        QString columnName = columnList[column];
+        if (columnName.startsWith("/"))
+        {
+            columnName = columnName.mid(1);
+        }
+        columnName.replace("/", "\n/");
+        columnName.prepend("/");
+        columnName.append(QString("\n(%1 pics)")
+                             .arg(itemCount));
+        QTableWidgetItem* headerItem =
+                new QTableWidgetItem(columnName);
+        QFont font(headerItem->font());
+        font.setPixelSize(10);
+        headerItem->setFont(font);
         m_ui->tableWidget->setHorizontalHeaderItem(column,
-                                                   new QTableWidgetItem(columnName));
+                                                   headerItem);
     }
     QHeaderView* horizontalHeader =  m_ui->tableWidget->horizontalHeader();
     horizontalHeader->setResizeMode(QHeaderView::Interactive);
