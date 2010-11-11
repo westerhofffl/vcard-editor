@@ -427,6 +427,10 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
                 QFont font = fileItem->font();
                 font.setBold(true);
                 fileItem->setFont(font);
+                if (currentFileIndex == -1)
+                {
+                    currentFileIndex = fileIndex;
+                }
             }
             m_ui->tableWidget->setItem(row, column, fileItem);
             if (fileIndex == currentFileIndex)
@@ -481,6 +485,30 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
     m_ui->tableWidget->setCurrentItem(currentItem,QItemSelectionModel::NoUpdate);
 
     //QApplication::restoreOverrideCursor();
+
+    delete m_ui->sortButton->menu();
+    QMenu* sortMenu = new QMenu(m_ui->sortButton);
+    QMenu* contentSortMenu = new QMenu("content", m_ui->sortButton);
+    QMenu* alphabeticalSortMenu = new QMenu("alphabetical", m_ui->sortButton);
+    for(int column=0;column<columnList.size();++column)
+    {
+        QString columnName = columnList[column];
+        if (columnName.isEmpty())
+        {
+            columnName = "/";
+        }
+        QAction* contentSortAction = contentSortMenu->addAction(columnName,
+                                                                this,
+                                                                SLOT(sortByContent()));
+        QAction* alphabeticalSortAction = alphabeticalSortMenu->addAction(columnName,
+                                                                          this,
+                                                                          SLOT(sortAlphabetical()));
+        contentSortAction->setData(column);
+        alphabeticalSortAction->setData(column);
+    }
+    sortMenu->addMenu(contentSortMenu);
+    sortMenu->addMenu(alphabeticalSortMenu);
+    m_ui->sortButton->setMenu(sortMenu);
 }
 
 void MainWindow::showTablePreview()
@@ -573,6 +601,20 @@ void MainWindow::toggleMove()
         m_project->setFileMoved(fileIndex, !m_project->isFileMoved(fileIndex));
     }
     updateTable(-1, -1);
+}
+
+void MainWindow::sortByContent()
+{
+    QAction* action = dynamic_cast<QAction*>(sender());
+    int section = action->data().toInt();
+    qWarning("content sort by %i", section);
+}
+
+void MainWindow::sortAlphabetical()
+{
+    QAction* action = dynamic_cast<QAction*>(sender());
+    int section = action->data().toInt();
+    qWarning("alphabetical sort by %i", section);
 }
 
 QList<int> MainWindow::getSelectedFileList() const
