@@ -3,7 +3,10 @@
 #include "Project.h"
 #include "ProjectSettingsDialog.h"
 
+#include "exif/exif.h"
+
 #include <QButtonGroup>
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QDir>
 #include <QFileInfo>
@@ -487,6 +490,35 @@ void MainWindow::showTablePreview()
     if (itemList.size() == 1)
     {
         fileIndex = itemList.first()->data(Qt::UserRole).toInt();
+
+        QFileInfo fileInfo(m_project->getAbsoluteFilePath(fileIndex));
+
+        EXIFINFO exifInfo;
+        memset(&exifInfo, 0, sizeof(EXIFINFO));
+        Cexif cExif(&exifInfo);
+        FILE* file = fopen(fileInfo.absoluteFilePath().toAscii().data(), "r");
+        cExif.DecodeExif(file);
+        fclose(file);
+
+        QString fileInfoString = QString("%1:%2Kb,%3")
+                                 .arg(fileInfo.fileName())
+                                 .arg(fileInfo.size()/1024)
+                                 .arg(fileInfo.created().toString("dd.MM''yy"));
+        if (exifInfo.IsExif)
+        {
+            QDateTime exifDateTime = QDateTime::fromString(
+                    QString::fromAscii(exifInfo.DateTime),
+                    "yyyy:MM:dd HH:mm:ss");
+            fileInfoString.append(QString(",exif %1").arg(
+                    //QString::fromAscii(exifInfo.DateTime)));
+                    exifDateTime.toString("dd.MM''yy")));
+        }
+        m_ui->infoLabel->setText(fileInfoString.simplified());
+
+    }
+    else
+    {
+        m_ui->infoLabel->setText(QString("%1 files selected").arg(itemList.size()));
     }
     showPreview(fileIndex, m_ui->tablePreviewButton);
 }

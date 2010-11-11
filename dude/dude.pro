@@ -13,11 +13,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         MainWindow.cpp \
     ProjectSettingsDialog.cpp \
-    Project.cpp
+    Project.cpp \
+    exif/exif.cpp
 
 HEADERS  += MainWindow.h \
     ProjectSettingsDialog.h \
-    Project.h
+    Project.h \
+    exif/exif.h
 
 FORMS    += MainWindow.ui \
     ProjectSettingsDialog.ui
