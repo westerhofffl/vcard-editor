@@ -6,7 +6,7 @@ class Project;
 class QButtonGroup;
 class QPushButton;
 class QTreeWidgetItem;
-class QTableWidgetItem;
+#include <QTableWidget>
 namespace Ui {
     class MainWindow;
 }
@@ -76,6 +76,18 @@ private:
     int m_duplicatesGroupCount;
     int m_notResolvedGroupCount;
     int m_removedGroupCount;
+
+    ///////////////////////////////////////////////////
+
+    class TableItem : public QTableWidgetItem
+    {
+    public:
+        TableItem(const QString& text);
+
+        bool operator<(const QTableWidgetItem& other) const;
+    private:
+        QMultiMap<QString, int> getLineMap() const;
+    };
 };
 
 #endif // MAINWINDOW_H
