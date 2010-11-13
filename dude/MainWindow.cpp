@@ -344,7 +344,7 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
         m_tableFileIndex = selectedFileIndex;
     }
 
-    m_ui->tableWidget->setSortingEnabled(false);
+    //m_ui->tableWidget->setSortingEnabled(false);
     m_ui->tableWidget->viewport()->setUpdatesEnabled(false);
     m_ui->tableWidget->blockSignals(true);
 
@@ -382,11 +382,20 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
         selectedFileList = m_project->getGroupFileIndexSet(selectedGroupIndex).toList();
         qSort(selectedFileList);
     }
+    QSet<int> shownFileSet = selectedFileList.toSet();
+    int shownFileCount = 0;
+    while(shownFileSet.size() != shownFileCount)
+    {
+        shownFileCount = shownFileSet.size();
+        QList<int> groupList = m_project->getGroupList(shownFileSet.toList());
+        shownFileSet = m_project->getGroupFileIndexSet(groupList.toSet());
+        shownFileSet = m_project->getFolderFileList(shownFileSet.toList()).toSet();
+    }
 
     QStringList columnList;
     QList<int> groupIndexList;
-    QList<int> folderFileList = m_project->getFolderFileList(selectedFileList);
-    groupIndexList = m_project->getGroupList(folderFileList);
+    //QList<int> folderFileList = m_project->getFolderFileList(selectedFileList);
+    groupIndexList = m_project->getGroupList(shownFileSet.toList());
 
     int row = 0;
     foreach(int groupIndex, groupIndexList)
@@ -491,9 +500,9 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
 
     //QApplication::restoreOverrideCursor();
 
-    m_ui->tableWidget->setSortingEnabled(true);
+    //m_ui->tableWidget->setSortingEnabled(true);
     m_ui->tableWidget->sortItems(0);
-    m_ui->tableWidget->horizontalHeader()->setSortIndicatorShown(false);
+    //m_ui->tableWidget->horizontalHeader()->setSortIndicatorShown(false);
 
     delete m_ui->sortButton->menu();
     QMenu* sortMenu = new QMenu(m_ui->sortButton);

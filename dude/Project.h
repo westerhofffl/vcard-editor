@@ -48,8 +48,9 @@ public:
 
     int getGroupCount() const;
     QSet<int> getGroupFileIndexSet(int index) const;
+    QSet<int> getGroupFileIndexSet(const QSet<int>& groupIndexSet) const;
 
-    QList<int> getGroupList(const QList<int>& index) const;
+    QList<int> getGroupList(const QList<int>& fileIndexList) const;
 
 private slots:
     void doScan();

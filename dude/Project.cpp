@@ -184,6 +184,16 @@ QSet<int> Project::getGroupFileIndexSet(int index) const
     return m_checkSumIndexFileIndexHash.values(index).toSet();
 }
 
+QSet<int> Project::getGroupFileIndexSet(const QSet<int>& groupIndexSet) const
+{
+    QSet<int> fileIndexSet;
+    foreach(int groupIndex, groupIndexSet)
+    {
+        fileIndexSet += getGroupFileIndexSet(groupIndex);
+    }
+    return fileIndexSet;
+}
+
 QList<int> Project::getGroupList(const QList<int> &fileIndexList) const
 {
     QSet<int> groupIndexSet;
