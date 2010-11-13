@@ -354,6 +354,7 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
     if (currentItem != NULL)
     {
         currentFileIndex = currentItem->data(Qt::UserRole).toInt();
+        currentItem = NULL;
     }
     QSet<int> selectedFileIndexSet;
     foreach(QTableWidgetItem* selectedItem, m_ui->tableWidget->selectedItems())
@@ -483,7 +484,10 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
 
     m_ui->tableWidget->viewport()->setUpdatesEnabled(true);
     m_ui->tableWidget->blockSignals(false);
-    m_ui->tableWidget->setCurrentItem(currentItem,QItemSelectionModel::NoUpdate);
+    if (currentItem)
+    {
+        m_ui->tableWidget->setCurrentItem(currentItem,QItemSelectionModel::NoUpdate);
+    }
 
     //QApplication::restoreOverrideCursor();
 
