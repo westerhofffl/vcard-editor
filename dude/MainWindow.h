@@ -38,9 +38,6 @@ private slots:
    void unmove();
    void toggleMove();
 
-   void sortByContent();
-   void sortAlphabetical();
-
 private:
    void updateTable(int groupIndex, int fileIndex);
    QList<int> getSelectedFileList() const;

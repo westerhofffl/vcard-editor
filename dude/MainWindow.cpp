@@ -429,7 +429,6 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
                 }
             }
             QTableWidgetItem* fileItem = new TableItem(m_project->getFileName(fileIndex));
-            qWarning("QTableWidgetItem for %s, checked: %i", m_project->getFileName(fileIndex).toAscii().data(), m_project->isFileMoved(fileIndex));
             fileItem->setCheckState(m_project->isFileMoved(fileIndex) ? Qt::Checked : Qt::Unchecked);
             fileItem->setData(Qt::UserRole, fileIndex);
             if (((groupIndex == selectedGroupIndex) && (selectedFileIndex == -1)) ||
@@ -477,7 +476,7 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
         }
         columnName.replace("/", "\n/");
         columnName.prepend("/");
-        columnName.append(QString("\n(%1 pics)")
+        columnName.append(QString("\n(%1 files)")
                              .arg(itemCount));
         QTableWidgetItem* headerItem =
                 new QTableWidgetItem(columnName);
@@ -486,6 +485,14 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
         headerItem->setFont(font);
         m_ui->tableWidget->setHorizontalHeaderItem(column,
                                                    headerItem);
+        for(int row = 0; row < m_ui->tableWidget->rowCount();++row)
+        {
+            QTableWidgetItem* item = m_ui->tableWidget->item(row, column);
+            if (!item)
+            {
+                m_ui->tableWidget->setItem(row, column, new TableItem(""));
+            }
+        }
     }
     QHeaderView* horizontalHeader =  m_ui->tableWidget->horizontalHeader();
     horizontalHeader->setResizeMode(QHeaderView::Interactive);
@@ -503,30 +510,6 @@ void MainWindow::updateTable(int selectedGroupIndex, int selectedFileIndex)
     //m_ui->tableWidget->setSortingEnabled(true);
     m_ui->tableWidget->sortItems(0);
     //m_ui->tableWidget->horizontalHeader()->setSortIndicatorShown(false);
-
-    delete m_ui->sortButton->menu();
-    QMenu* sortMenu = new QMenu(m_ui->sortButton);
-    QMenu* contentSortMenu = new QMenu("content", m_ui->sortButton);
-    QMenu* alphabeticalSortMenu = new QMenu("alphabetical", m_ui->sortButton);
-    for(int column=0;column<columnList.size();++column)
-    {
-        QString columnName = columnList[column];
-        if (columnName.isEmpty())
-        {
-            columnName = "/";
-        }
-        QAction* contentSortAction = contentSortMenu->addAction(columnName,
-                                                                this,
-                                                                SLOT(sortByContent()));
-        QAction* alphabeticalSortAction = alphabeticalSortMenu->addAction(columnName,
-                                                                          this,
-                                                                          SLOT(sortAlphabetical()));
-        contentSortAction->setData(column);
-        alphabeticalSortAction->setData(column);
-    }
-    sortMenu->addMenu(contentSortMenu);
-    sortMenu->addMenu(alphabeticalSortMenu);
-    m_ui->sortButton->setMenu(sortMenu);
 }
 
 void MainWindow::showTablePreview()
@@ -621,20 +604,6 @@ void MainWindow::toggleMove()
     updateTable(-1, -1);
 }
 
-void MainWindow::sortByContent()
-{
-    QAction* action = dynamic_cast<QAction*>(sender());
-    int section = action->data().toInt();
-    qWarning("content sort by %i", section);
-}
-
-void MainWindow::sortAlphabetical()
-{
-    QAction* action = dynamic_cast<QAction*>(sender());
-    int section = action->data().toInt();
-    qWarning("alphabetical sort by %i", section);
-}
-
 QList<int> MainWindow::getSelectedFileList() const
 {
     QList<QTableWidgetItem*> itemList = m_ui->tableWidget->selectedItems();
@@ -701,20 +670,16 @@ bool MainWindow::TableItem::operator<(const QTableWidgetItem& other) const
         const TableItem& otherTableItem = dynamic_cast<const TableItem&>(other);
         QMultiMap<QString, int> otherLineMap = otherTableItem.getLineMap();
         QStringList otherColumnTextList = otherLineMap.keys();
-        qWarning("this: %s", thisColumnTextList.join(",").toAscii().data());
-        qWarning("other: %s", otherColumnTextList.join(",").toAscii().data());
         for(int column=0;column < qMin(thisLineMap.size(), otherLineMap.size());++column)
         {
             QString thisColumnText = thisColumnTextList[column];
             QString otherColumnText = otherColumnTextList[column];
             if (thisColumnText < otherColumnText)
             {
-                qWarning("isLess");
                 return true;
             }
             if (thisColumnText > otherColumnText)
             {
-                qWarning("isMore");
                 return false;
             }
             return (thisLineMap.value(thisColumnText) < otherLineMap.value(otherColumnText));
@@ -723,7 +688,6 @@ bool MainWindow::TableItem::operator<(const QTableWidgetItem& other) const
     catch(...)
     {
     }
-    qWarning("isNix");
     return false;
 }
 QMultiMap<QString, int> MainWindow::TableItem::getLineMap() const
@@ -733,7 +697,7 @@ QMultiMap<QString, int> MainWindow::TableItem::getLineMap() const
     for(int column = 0; column < table->columnCount();++column) {
         QString itemText = "~";
         QTableWidgetItem* item = table->item(row(), column);
-        if (item)
+        if (!item->text().simplified().isEmpty())
         {
             itemText = item->text();
         }
