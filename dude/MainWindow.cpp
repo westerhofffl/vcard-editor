@@ -223,7 +223,6 @@ void MainWindow::updateGroup(int index)
     groupItem->setData(0, TREE_ROLE_MOVED_COUNT, movedCount);    
 
     //updateTable(-1, -1);
-    updateFilter(groupItem);
 
     bool isMovedGroup = (fileIndexList.size() == movedCount);
     bool isDuplicatesGroup = (fileIndexList.size() > 1);
@@ -252,6 +251,7 @@ void MainWindow::updateGroup(int index)
         m_duplicatesGroupCount += (isDuplicatesGroup != wasDuplicatesGroup) * (isDuplicatesGroup ? 1 : -1);
         m_notResolvedGroupCount += (isNotResolvedGroup != wasNotResolvedGroup) * (isNotResolvedGroup ? 1 : -1);
     }
+    updateFilter(groupItem);
     m_ui->showAllRadioButton->setText(QString("all (%1)").arg(m_totalGroupCount));
     m_ui->showDuplicatesOnlyRadioButton->setText(QString("duplicates only (%1)").arg(m_duplicatesGroupCount));
     m_ui->showNotResolvedOnlyRadioButton->setText(QString("not resolved only (%1)").arg(m_notResolvedGroupCount));
